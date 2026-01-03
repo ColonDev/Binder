@@ -44,7 +44,7 @@ public class AuthController {
 
     @GetMapping("/login")
     public String loginPage(HttpSession session) {
-        if (session.getAttribute("user") != null) {
+        if (session.getAttribute("userId") != null) {
             return "redirect:/dashboard";
         }
         return "login";
@@ -64,7 +64,7 @@ public class AuthController {
             return "login";
         }
 
-        String sql = "SELECT a.password_hash, u.full_name " +
+        String sql = "SELECT a.password_hash, u.full_name, u.user_id, u.email " +
                      "FROM users u " +
                      "JOIN authentications a ON u.user_id = a.user_id " +
                      "WHERE u.email = ? AND a.provider = 'LOCAL'";
@@ -75,8 +75,10 @@ public class AuthController {
             String savedHash = (String) results.get(0).get("password_hash");
 
             if (savedHash != null && BCrypt.checkpw(password, savedHash)) {
-                // Store user info in session
-                session.setAttribute("user", results.get(0).get("full_name"));
+                // Store unique identifier, name, and email in session
+                session.setAttribute("userId", results.get(0).get("user_id"));
+                session.setAttribute("userName", results.get(0).get("full_name"));
+                session.setAttribute("userEmail", results.get(0).get("email"));
                 return "redirect:/dashboard";
             }
         }
@@ -87,11 +89,12 @@ public class AuthController {
 
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
-        Object user = session.getAttribute("user");
-        if (user == null) {
+        Object userId = session.getAttribute("userId");
+        if (userId == null) {
             return "redirect:/login";
         }
-        model.addAttribute("name", user);
+        model.addAttribute("name", session.getAttribute("userName"));
+        model.addAttribute("email", session.getAttribute("userEmail"));
         return "dashboard";
     }
 
