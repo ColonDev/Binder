@@ -3,6 +3,7 @@
 <head><title>Register - Binder</title></head>
 <body>
     <h2>Create Account</h2>
+    <div th:if="${error}" style="color: red;" th:text="${error}"></div>
     <form action="/register" method="post">
         <input type="text" name="fullName" placeholder="Full Name" required><br>
         <input type="email" name="email" placeholder="Email" required><br>
