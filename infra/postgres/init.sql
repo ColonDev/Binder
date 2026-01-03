@@ -188,3 +188,16 @@ CREATE TABLE messages (
                           content        TEXT NOT NULL,
                           sent_at        TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+-- TEST DATA
+INSERT INTO users (user_id, email, full_name, role)
+VALUES ('00000000-0000-0000-0000-000000000001', 'teacher@binder.com', 'Joseph Joestar', 'TEACHER');
+
+INSERT INTO authentications (user_id, provider, provider_id, password_hash)
+VALUES ('00000000-0000-0000-0000-000000000001', 'LOCAL', 'teacher@binder.com', crypt('teacher123', gen_salt('bf')));
+
+INSERT INTO users (user_id, email, full_name, role)
+VALUES ('00000000-0000-0000-0000-000000000002', 'student@binder.com', 'Jotaro Kujoh', 'STUDENT');
+
+INSERT INTO authentications (user_id, provider, provider_id, password_hash)
+VALUES ('00000000-0000-0000-0000-000000000002', 'LOCAL', 'student@binder.com', crypt('student123', gen_salt('bf')));
