@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Register - Binder</title></head>
+<body>
+    <h2>Create Account</h2>
+    <form action="/register" method="post">
+        <input type="text" name="fullName" placeholder="Full Name" required><br>
+        <input type="email" name="email" placeholder="Email" required><br>
+        <input type="password" name="password" placeholder="Password" required><br>
+        <select name="role">
+            <option value="STUDENT">Student</option>
+            <option value="TEACHER">Teacher</option>
+        </select><br>
+        <button type="submit">Register</button>
+    </form>
+</body>
+</html>
