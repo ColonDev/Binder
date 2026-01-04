@@ -1,4 +1,4 @@
-package com.binder.demo;
+package com.binder.demo.controllers;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -25,10 +25,10 @@ import java.util.regex.Pattern;
 @Controller
 public class AuthController {
 
-    // Used to run SQL queries and updates on the database
+    /** Used to run SQL queries and updates on the database */
     private final JdbcTemplate jdbcTemplate;
 
-    // Email format check
+    /** Email format checker */
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
@@ -64,7 +64,7 @@ public class AuthController {
             return "login";
         }
 
-        String sql = "SELECT a.password_hash, u.full_name, u.user_id, u.email " +
+        String sql = "SELECT a.password_hash, u.full_name, u.user_id, u.email, u.role " +
                      "FROM users u " +
                      "JOIN authentications a ON u.user_id = a.user_id " +
                      "WHERE u.email = ? AND a.provider = 'LOCAL'";
@@ -75,10 +75,10 @@ public class AuthController {
             String savedHash = (String) results.get(0).get("password_hash");
 
             if (savedHash != null && BCrypt.checkpw(password, savedHash)) {
-                // Store unique identifier, name, and email in session
                 session.setAttribute("userId", results.get(0).get("user_id"));
                 session.setAttribute("userName", results.get(0).get("full_name"));
                 session.setAttribute("userEmail", results.get(0).get("email"));
+                session.setAttribute("userRole", results.get(0).get("role"));
                 return "redirect:/dashboard";
             }
         }
@@ -89,12 +89,27 @@ public class AuthController {
 
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
-        Object userId = session.getAttribute("userId");
+        UUID userId = (UUID) session.getAttribute("userId");
         if (userId == null) {
             return "redirect:/login";
         }
+
         model.addAttribute("name", session.getAttribute("userName"));
         model.addAttribute("email", session.getAttribute("userEmail"));
+        model.addAttribute("role", session.getAttribute("userRole"));
+
+        // Fetch classrooms
+        String classSql = 
+            "SELECT c.class_id, c.name, c.description " +
+            "FROM classrooms c " +
+            "LEFT JOIN enrollments e ON c.class_id = e.class_id " +
+            "LEFT JOIN classroom_teachers ct ON c.class_id = ct.class_id " +
+            "WHERE e.student_id = ? OR ct.teacher_id = ? " +
+            "GROUP BY c.class_id";
+
+        List<Map<String, Object>> classrooms = jdbcTemplate.queryForList(classSql, userId, userId);
+        model.addAttribute("classrooms", classrooms);
+
         return "dashboard";
     }
 
