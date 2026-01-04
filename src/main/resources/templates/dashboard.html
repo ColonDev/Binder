@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard - Binder</title>
 
+    <link rel="stylesheet" th:href="@{/css/base.css}" />
     <link rel="stylesheet" th:href="@{/css/dashboard.css}" />
 </head>
 
 <body>
 <div class="app">
-    <!-- LEFT SIDEBAR -->
     <aside class="sidebar">
         <a class="nav-btn is-active" href="/dashboard">Home</a>
         <a class="nav-btn" href="/todo">To-Do</a>
@@ -18,28 +18,22 @@
         <a class="nav-btn" href="/progress">Progress</a>
         <a class="nav-btn" href="/messages">Messages</a>
 
-        <!-- TODO: Future process messages for todo and flashcards -->
-
         <div class="sidebar-spacer"></div>
 
         <div class="profile-card">
-            <div class="avatar">%PROFILEPICTURE%</div>
             <div class="profile-line" th:text="${name}">%ACCOUNTNAME%</div>
             <div class="profile-line" th:text="${role}">%ROLE%</div>
-            <div style="text-align:center;">
+            <div class="profile-actions">
                 <a class="logout" href="/logout">Logout</a>
             </div>
         </div>
     </aside>
 
-    <!-- MAIN -->
     <main id="main"
           class="main"
           th:classappend="${role == 'TEACHER'} ? ' has-ribbon' : ''">
-        <!-- Ribbon: stays top-right like screenshots -->
         <div class="ribbon" th:if="${role == 'TEACHER'}" onclick="toggleManage()">Manage</div>
 
-        <!-- RIGHT MANAGE SIDEBAR / STRIP -->
         <aside id="manageSide" class="manage-side" aria-hidden="true">
             <div class="manage-inner">
                 <button class="new-class-btn" type="button" onclick="openCreator()">New Class</button>
@@ -51,24 +45,23 @@
             <h1 class="page-title">Your Classrooms</h1>
 
             <div id="classroomsArea">
-                <div th:if="${#lists.isEmpty(classrooms)}" style="margin-top:24px; font-size:16px;">
+                <div th:if="${#lists.isEmpty(classrooms)}" class="empty-msg">
                     You are not enrolled in any classes yet.
                 </div>
 
                 <div class="notes-wrap" th:if="${!#lists.isEmpty(classrooms)}">
                     <div class="notes-grid">
-                        <div th:each="classroom : ${classrooms}"
+                        <a th:each="classroom : ${classrooms}"
+                             th:href="@{/classrooms/{id}(id=${classroom.class_id})}"
                              class="note"
                              th:classappend="${#strings.arraySplit('yellow,green,blue,purple,pink', ',')[T(java.lang.Math).abs(classroom.class_id.hashCode()) % 5]}">
                             <h2 class="note-title" th:text="${classroom.name}"></h2>
                             <p class="note-body" th:text="${classroom.description}"></p>
-
-                        </div>
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <!-- CLASSROOM CREATOR PANEL (overlay inside paper) -->
             <section id="creator" class="creator" aria-hidden="true">
                 <div class="topbar">
                     <span>Classroom Creator</span>
@@ -85,7 +78,7 @@
                     </div>
 
                     <div class="desc-label">Description</div>
-                    <div style="padding:0 12px 10px; background:var(--creator-strip);">
+                    <div class="textarea-wrap">
                         <textarea id="ccDesc" name="description" placeholder="..."></textarea>
                     </div>
 
@@ -131,9 +124,11 @@
     }
 
     function openCreator(){
-      openManage();
-
       const main = document.getElementById('main');
+      const side = document.getElementById('manageSide');
+
+      main.classList.add('manage-open');
+      side.setAttribute('aria-hidden','false');
       main.classList.add('creator-open');
 
       document.getElementById('ccName').value = '';
@@ -145,7 +140,6 @@
       c.classList.add('is-open');
       c.setAttribute('aria-hidden','false');
 
-      // ensure it's visible without overlap / weird scroll positions
       c.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 

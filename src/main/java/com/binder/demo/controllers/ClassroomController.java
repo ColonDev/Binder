@@ -5,6 +5,7 @@ import com.binder.demo.services.ClassroomService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -69,18 +70,29 @@ public class ClassroomController {
     }
 
     /**
-     * Retrieves a single classroom by its unique identifier.
-     * If the classroom exists, it is returned with HTTP 200.
-     * If not found, HTTP 404 is returned.
+     * Retrieves a single classroom by its unique identifier and displays the classroom page.
      * @param id unique identifier of the classroom
-     * @return ResponseEntity containing the classroom or a not-found response
+     * @param model Spring UI model
+     * @param session current HTTP session
+     * @return classroom view or redirect to dashboard if not found
      */
     @GetMapping("/classrooms/{id}")
-    @ResponseBody
-    public ResponseEntity<Classroom> getClassroomById(@PathVariable UUID id) {
-        return classroomService.getClassById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public String getClassroomById(@PathVariable UUID id, Model model, HttpSession session) {
+        UUID userId = (UUID) session.getAttribute("userId");
+        if (userId == null) {
+            return "redirect:/login";
+        }
+
+        Optional<Classroom> classroom = classroomService.getClassById(id);
+        if (classroom.isPresent()) {
+            model.addAttribute("classroom", classroom.get());
+            model.addAttribute("name", session.getAttribute("userName"));
+            model.addAttribute("role", session.getAttribute("userRole"));
+            // Add empty lists for posts to avoid null checks in thymeleaf if they aren't implemented yet
+            model.addAttribute("posts", List.of()); 
+            return "classroom";
+        }
+        return "redirect:/dashboard";
     }
 
     /**
