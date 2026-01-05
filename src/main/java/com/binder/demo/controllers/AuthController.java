@@ -1,5 +1,8 @@
 package com.binder.demo.controllers;
 
+import com.binder.demo.classroom.Classroom;
+import com.binder.demo.services.ClassroomService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCrypt;
@@ -10,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,13 +30,17 @@ public class AuthController {
     /** Used to run SQL queries and updates on the database */
     private final JdbcTemplate jdbcTemplate;
 
+    /** Used to fetch classroom data for the dashboard (keeps classroom SQL out of this controller) */
+    private final ClassroomService classroomService;
+
     /** Email format checker */
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     // Constructor that receives the database helper
-    public AuthController(JdbcTemplate jdbcTemplate) {
+    public AuthController(JdbcTemplate jdbcTemplate, ClassroomService classroomService) {
         this.jdbcTemplate = jdbcTemplate;
+        this.classroomService = classroomService;
     }
 
     @GetMapping("/")
@@ -65,9 +71,9 @@ public class AuthController {
         }
 
         String sql = "SELECT a.password_hash, u.full_name, u.user_id, u.email, u.role " +
-                     "FROM users u " +
-                     "JOIN authentications a ON u.user_id = a.user_id " +
-                     "WHERE u.email = ? AND a.provider = 'LOCAL'";
+                "FROM users u " +
+                "JOIN authentications a ON u.user_id = a.user_id " +
+                "WHERE u.email = ? AND a.provider = 'LOCAL'";
 
         List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, email);
 
@@ -75,10 +81,17 @@ public class AuthController {
             String savedHash = (String) results.get(0).get("password_hash");
 
             if (savedHash != null && BCrypt.checkpw(password, savedHash)) {
-                session.setAttribute("userId", results.get(0).get("user_id"));
+
+                // Normalise userId into a real UUID before storing in session
+                Object rawUserId = results.get(0).get("user_id");
+                UUID userId = (rawUserId instanceof UUID)
+                        ? (UUID) rawUserId
+                        : UUID.fromString(rawUserId.toString());
+
+                session.setAttribute("userId", userId);
                 session.setAttribute("userName", results.get(0).get("full_name"));
                 session.setAttribute("userEmail", results.get(0).get("email"));
-                session.setAttribute("userRole", results.get(0).get("role"));
+                session.setAttribute("userRole", results.get(0).get("role").toString().trim());
                 return "redirect:/dashboard";
             }
         }
@@ -98,16 +111,8 @@ public class AuthController {
         model.addAttribute("email", session.getAttribute("userEmail"));
         model.addAttribute("role", session.getAttribute("userRole"));
 
-        // Fetch classrooms
-        String classSql = 
-            "SELECT c.class_id, c.name, c.description " +
-            "FROM classrooms c " +
-            "LEFT JOIN enrollments e ON c.class_id = e.class_id " +
-            "LEFT JOIN classroom_teachers ct ON c.class_id = ct.class_id " +
-            "WHERE e.student_id = ? OR ct.teacher_id = ? " +
-            "GROUP BY c.class_id";
-
-        List<Map<String, Object>> classrooms = jdbcTemplate.queryForList(classSql, userId, userId);
+        // Fetch classrooms using the ClassroomService (
+        List<Classroom> classrooms = classroomService.getClassroomsForUser(userId);
         model.addAttribute("classrooms", classrooms);
 
         return "dashboard";
