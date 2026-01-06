@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="english">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -32,6 +32,7 @@
     <main id="main"
           class="main"
           th:classappend="${role == 'TEACHER'} ? ' has-ribbon' : ''">
+
         <div class="ribbon" th:if="${role == 'TEACHER'}" onclick="toggleManage()">Manage</div>
 
         <aside id="manageSide" class="manage-side" aria-hidden="true">
@@ -45,18 +46,19 @@
             <h1 class="page-title">Your Classrooms</h1>
 
             <div id="classroomsArea">
-                <div th:if="${#lists.isEmpty(classrooms)}" class="empty-msg">
+                <div th:if="${classrooms == null || #lists.isEmpty(classrooms)}" class="empty-msg">
                     You are not enrolled in any classes yet.
                 </div>
 
-                <div class="notes-wrap" th:if="${!#lists.isEmpty(classrooms)}">
+                <div class="notes-wrap" th:if="${classrooms != null && !#lists.isEmpty(classrooms)}">
                     <div class="notes-grid">
                         <a th:each="classroom : ${classrooms}"
-                             th:href="@{/classrooms/{id}(id=${classroom.class_id})}"
-                             class="note"
-                             th:classappend="${#strings.arraySplit('yellow,green,blue,purple,pink', ',')[T(java.lang.Math).abs(classroom.class_id.hashCode()) % 5]}">
-                            <h2 class="note-title" th:text="${classroom.name}"></h2>
-                            <p class="note-body" th:text="${classroom.description}"></p>
+                           th:href="@{/classrooms/{id}(id=${classroom.classId})}"
+                           class="note"
+                           th:classappend="${#strings.arraySplit('yellow,green,blue,purple,pink', ',')[T(java.lang.Math).abs(classroom.classId.hashCode()) % 5]}">
+
+                            <h2 class="note-title" th:text="${classroom.name}">Class name</h2>
+                            <p class="note-body" th:text="${classroom.description} ?: ''">Description</p>
                         </a>
                     </div>
                 </div>
@@ -79,7 +81,7 @@
 
                     <div class="desc-label">Description</div>
                     <div class="textarea-wrap">
-                        <textarea id="ccDesc" name="description" placeholder="..."></textarea>
+                        <label for="ccDesc"></label><textarea id="ccDesc" name="description" placeholder="..."></textarea>
                     </div>
 
                     <div class="block">
@@ -124,32 +126,32 @@
     }
 
     function openCreator(){
-      const main = document.getElementById('main');
-      const side = document.getElementById('manageSide');
+        const main = document.getElementById('main');
+        const side = document.getElementById('manageSide');
 
-      main.classList.add('manage-open');
-      side.setAttribute('aria-hidden','false');
-      main.classList.add('creator-open');
+        main.classList.add('manage-open');
+        side.setAttribute('aria-hidden','false');
+        main.classList.add('creator-open');
 
-      document.getElementById('ccName').value = '';
-      document.getElementById('ccDesc').value = '';
-      document.getElementById('ccStudents').value = '';
-      document.getElementById('ccTeachers').value = '';
+        document.getElementById('ccName').value = '';
+        document.getElementById('ccDesc').value = '';
+        document.getElementById('ccStudents').value = '';
+        document.getElementById('ccTeachers').value = '';
 
-      const c = document.getElementById('creator');
-      c.classList.add('is-open');
-      c.setAttribute('aria-hidden','false');
+        const c = document.getElementById('creator');
+        c.classList.add('is-open');
+        c.setAttribute('aria-hidden','false');
 
-      c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        c.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function closeCreator(){
-      const c = document.getElementById('creator');
-      c.classList.remove('is-open');
-      c.setAttribute('aria-hidden','true');
+        const c = document.getElementById('creator');
+        c.classList.remove('is-open');
+        c.setAttribute('aria-hidden','true');
 
-      const main = document.getElementById('main');
-      main.classList.remove('creator-open');
+        const main = document.getElementById('main');
+        main.classList.remove('creator-open');
     }
 
     function saveClass(){
@@ -161,7 +163,6 @@
         const form = document.createElement('form');
         form.method = 'post';
         form.action = '/classrooms/create';
-
 
         const i1 = document.createElement('input');
         i1.type = 'hidden'; i1.name = 'name'; i1.value = name;

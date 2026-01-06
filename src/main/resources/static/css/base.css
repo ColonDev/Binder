@@ -461,6 +461,143 @@
             border-radius:8px;
         }
 
+        /* Authentication (login / register) styles */
+        .auth-page {
+            /* removed the darkening linear-gradient so the background is not darkened */
+            background:
+                repeating-linear-gradient(
+                    to bottom,
+                    transparent 0px,
+                    transparent 18px,
+                    var(--paper-line) 19px,
+                    transparent 20px
+                ),
+                var(--paper-bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 20px;
+            box-sizing: border-box;
+        }
+
+        .auth-card{
+            width:100%;
+            max-width:420px;
+            background: #fff;
+            border-radius: 0;               /* remove curves */
+            box-shadow: none;               /* remove shadow effect */
+            border:2px solid rgba(0,0,0,.12);
+            padding: 18px 26px 26px;
+            box-sizing: border-box;
+            color: #111;
+        }
+
+        /* Green header strip matching sidebar */
+        .auth-header{
+            background: var(--sidebar-green); /* reuse sidebar green exactly */
+            padding: 12px 14px;
+            border-radius: 0;                /* no curves */
+            margin: -18px -26px 12px; /* pull the strip to the card edges and overlap the card padding */
+            box-sizing: border-box;
+            color: #000;
+            font-weight: 900;
+            text-align: center;
+        }
+        .auth-header h2{
+            margin:0;
+            font-size:20px;
+            line-height:1;
+            color: #000;
+            font-weight:900;
+            background: transparent;
+        }
+
+        /* reduce original h2 styling to avoid duplicate spacing inside the card */
+        .auth-card h2{
+            margin: 0;
+            font-size: 22px;
+            font-weight: 900;
+            text-align: center;
+        }
+        .auth-card form{
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            margin-top:8px;
+        }
+        .auth-card input[type="text"],
+        .auth-card input[type="email"],
+        .auth-card input[type="password"],
+        .auth-card select,
+        .auth-card textarea{
+            width:100%;
+            padding:10px 12px;
+            font-size:16px;
+            border:2px solid rgba(0,0,0,.12);
+            border-radius:6px;
+            background: #fafafa;
+            box-sizing:border-box;
+            outline:none;
+            transition: border-color .12s, box-shadow .12s;
+        }
+        .auth-card input:focus,
+        .auth-card select:focus,
+        .auth-card textarea:focus{
+            border-color: rgba(98,168,111,0.9); /* use sidebar green */
+            box-shadow: 0 3px 0 rgba(0,0,0,.08);
+        }
+
+        .auth-actions{
+            display:flex;
+            align-items:center;
+            justify-content:center; /* changed: center the button(s) */
+            gap:12px;
+            margin-top:6px;
+        }
+
+        .btn {
+            display:inline-block;
+            padding:10px 14px;
+            font-size:16px;
+            font-weight:800;
+            border-radius:0;         /* remove curves */
+            text-decoration:none;
+            cursor:pointer;
+            border:2px solid rgba(0,0,0,.12);
+            background: #fff;
+            box-shadow: none;         /* remove shadow */
+        }
+        .btn-primary{
+            background: var(--sidebar-green);
+            color:#000;
+            border-color: rgba(0,0,0,.18);
+            box-shadow: none;         /* ensure no shadow */
+        }
+
+        .auth-footer{
+            margin-top:12px;
+            text-align:center;
+            font-size:14px;
+        }
+        .auth-footer a{ color: var(--sidebar-green); font-weight:800; text-decoration:none; }
+
+        .form-error{
+            color:#b00020;
+            background: rgba(176,0,32,0.05);
+            padding:8px 10px;
+            border-radius:6px;
+            border:1px solid rgba(176,0,32,0.12);
+            font-weight:700;
+            font-size:14px;
+        }
+
+        /* small screens */
+        @media (max-width:480px){
+            .auth-card{ padding:18px; border-radius:8px; }
+            .auth-card h2{ font-size:18px; }
+        }
+
         @media (max-width: 980px){
             .creator{
                 width:100%;
