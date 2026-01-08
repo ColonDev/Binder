@@ -1,26 +1,36 @@
 package com.binder.demo.classroom;
 
+import jakarta.persistence.*;
+
 import java.util.UUID;
 
-/*
-    Grade
-    Represents teacher feedback + marks for a submission.
-    Backed by the grades table.
- */
+@Entity
+@Table(name = "grades")
 public class Grade {
 
-    private UUID assignmentId;
-    private UUID studentId;
+    @Id
+    @Column(name = "submission_id", nullable = false)
+    private UUID submissionId;
+
+    @MapsId
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "submission_id")
+    private AssignmentSubmission submission;
+
+    @Column(name = "teacher_id", nullable = false)
     private UUID teacherId;
 
+    @Column(name = "marks_scored")
     private Integer marksScored;
+
+    @Column(name = "feedback")
     private String feedback;
 
-    public UUID getAssignmentId() { return assignmentId; }
-    public void setAssignmentId(UUID assignmentId) { this.assignmentId = assignmentId; }
+    public UUID getSubmissionId() { return submissionId; }
+    public void setSubmissionId(UUID submissionId) { this.submissionId = submissionId; }
 
-    public UUID getStudentId() { return studentId; }
-    public void setStudentId(UUID studentId) { this.studentId = studentId; }
+    public AssignmentSubmission getSubmission() { return submission; }
+    public void setSubmission(AssignmentSubmission submission) { this.submission = submission; }
 
     public UUID getTeacherId() { return teacherId; }
     public void setTeacherId(UUID teacherId) { this.teacherId = teacherId; }

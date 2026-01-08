@@ -1,0 +1,9 @@
+# Build output
+/target/
+
+# Local uploads
+/uploads/
+
+# IDE files
+.idea/MarsCodeWorkspaceAppSettings.xml
+.idea/zencoder/

@@ -1,226 +1,181 @@
+<!-- src/main/resources/templates/classroom.html -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title th:text="${classroom != null} ? ${classroom.name} + ' - Binder' : 'Classroom - Binder'">
+
+    <title th:text="${classroom != null} ? (${classroom.name} + ' - Binder') : 'Classroom - Binder'">
         Classroom - Binder
     </title>
 
     <link rel="stylesheet" th:href="@{/css/base.css}" />
-    <link rel="stylesheet" th:href="@{/css/classroom.css}" />
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}" />
+    <link rel="stylesheet" th:href="@{/css/classroom.css(v=${#dates.createNow().time})}" href="/css/classroom.css" />
 </head>
 
 <body>
 <div class="app">
-    <aside class="sidebar">
-        <a class="nav-btn" href="/dashboard">Home</a>
-        <a class="nav-btn" href="/todo">To-Do</a>
-        <a class="nav-btn" href="/flashcards">Flashcard</a>
-        <a class="nav-btn" href="/progress">Progress</a>
-        <a class="nav-btn" href="/messages">Messages</a>
-
-        <div class="sidebar-spacer"></div>
-
-        <div class="profile-card">
-            <div class="profile-line" th:text="${name}">%ACCOUNTNAME%</div>
-            <div class="profile-line" th:text="${role}">%ROLE%</div>
-            <div class="profile-actions">
-                <a class="logout" href="/logout">Logout</a>
-            </div>
-        </div>
-    </aside>
+    <div th:replace="fragments/sidebar :: sidebar('classroom')"></div>
 
     <main id="main"
           class="main"
-          th:classappend="${role == 'TEACHER'} ? ' has-ribbon' : ''">
+          th:with="isTeacher=${#strings.toString(role) == 'TEACHER'}, isStudent=${#strings.toString(role) == 'STUDENT'}, hasClass=${classroom != null}"
+          th:classappend="${isTeacher and hasClass} ? ' has-ribbon' : ''">
 
-        <div class="ribbon" th:if="${role == 'TEACHER'}" onclick="toggleManage()">Manage</div>
+        <div class="ribbon"
+             th:if="${isTeacher and hasClass}"
+             data-action="toggle-manage">Manage</div>
 
-        <aside id="manageSide" class="manage-side" aria-hidden="true">
+        <aside id="manageSide" class="manage-side" aria-hidden="true"
+               th:if="${isTeacher and hasClass}">
             <div class="manage-inner">
-                <div class="manage-card" style="margin-bottom:14px;">
+                <div class="manage-card">
                     <div class="header">Classroom</div>
                     <div class="body">
-                        <div class="label">Actions</div>
-                        <button class="import-btn" type="button" onclick="openPostCreator()">Create Post</button>
-                        <div style="height:10px;"></div>
-                        <button class="import-btn" type="button" onclick="openClassEditor()">Edit Class</button>
+                        <button class="btn btn-primary" type="button" data-action="open-modal" data-modal-id="postCreateModal">Create Post</button>
+                        <button class="btn" type="button" data-action="open-modal" data-modal-id="classroomEditModal" style="margin-top:10px;">Edit Classroom</button>
+                    </div>
+                </div>
+
+                <div class="manage-card">
+                    <div class="header">Enrolled students</div>
+                    <div class="body">
+                        <label class="field-label" for="enrollmentFilter">View</label>
+                        <select id="enrollmentFilter" class="select" data-action="switch-enrollment-list">
+                            <option value="students">Students</option>
+                            <option value="teachers">Teachers</option>
+                        </select>
+
+                        <div class="cm-section" data-list="students">
+                            <div class="form-error" th:if="${studentEnrollError}" th:text="${studentEnrollError}"></div>
+                            <div class="cm-list">
+                                <div class="cm-chip" th:each="student : ${enrolledStudents}">
+                                    <div class="cm-chip-text" th:text="${student}">student@email.com</div>
+                                    <form method="post" action="/classrooms/remove-student" style="margin:0;">
+                                        <input type="hidden" th:if="${_csrf != null}"
+                                               th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                        <input type="hidden" name="classId" th:value="${classroom.classId}" />
+                                        <input type="hidden" name="email" th:value="${student}" />
+                                        <button class="icon-btn" type="submit" title="Remove">×</button>
+                                    </form>
+                                </div>
+
+                                <div class="help" th:if="${enrolledStudents == null || #lists.isEmpty(enrolledStudents)}">
+                                    No students listed.
+                                </div>
+                            </div>
+
+                            <form class="cm-addrow" method="post" action="/classrooms/enroll">
+                                <input type="hidden" th:if="${_csrf != null}"
+                                       th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <input type="hidden" name="classId" th:value="${classroom.classId}" />
+                                <input class="input" name="studentEmails" type="email" placeholder="Input email" maxlength="254" required />
+                                <button class="btn btn-primary" type="submit">Add</button>
+                            </form>
+                        </div>
+
+                        <div class="cm-section" data-list="teachers" style="display:none;">
+                            <div class="form-error" th:if="${teacherEnrollError}" th:text="${teacherEnrollError}"></div>
+                            <div class="cm-list">
+                                <div class="cm-chip" th:each="teacher : ${enrolledTeachers}">
+                                    <div class="cm-chip-text" th:text="${teacher}">teacher@email.com</div>
+                                </div>
+
+                                <div class="help" th:if="${enrolledTeachers == null || #lists.isEmpty(enrolledTeachers)}">
+                                    No teachers listed.
+                                </div>
+                            </div>
+
+                            <form class="cm-addrow" method="post" action="/classrooms/enroll-teachers">
+                                <input type="hidden" th:if="${_csrf != null}"
+                                       th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <input type="hidden" name="classId" th:value="${classroom.classId}" />
+                                <input class="input" name="teacherEmails" type="email" placeholder="Input email" maxlength="254" required />
+                                <button class="btn btn-primary" type="submit">Add</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </aside>
 
-        <div id="paper" class="paper">
-            <h1 class="page-title" th:text="${classroom != null} ? ${classroom.name} : 'Classroom'">Classroom</h1>
+        <div class="paper">
+            <h1 class="page-title"
+                th:text="${classroom != null} ? ${classroom.name} : 'Classroom'">
+                Classroom
+            </h1>
 
-            <div class="classroom-grid">
-                <!-- LEFT: stream -->
-                <section class="stream">
-                    <div th:if="${posts == null || #lists.isEmpty(posts)}" class="empty-msg">
-                        There are no posts in this classroom yet.
-                    </div>
+            <!-- Sort / Filter -->
+            <div class="stream-toolbar" th:if="${posts != null && !#lists.isEmpty(posts)}">
+                <div class="left">
+                    <label for="postFilter">Show</label>
+                    <select id="postFilter" class="select">
+                        <option value="ALL">All</option>
+                        <option value="ASSIGNMENT">Assignments</option>
+                        <option value="RESOURCE">Resources</option>
+                    </select>
+                </div>
 
-                    <article th:each="post : ${posts}"
-                             class="post"
-                             th:classappend="${post.type} == 'RESOURCE' ? ' is-resource' : ''"
-                             th:attr="data-post-id=${post.id}">
-                        <div class="post-header">
-                            <div>
-                                <h2 class="post-title" th:text="${post.title}">Post title</h2>
-
-                                <div class="post-meta"
-                                     th:if="${post.type} == 'ASSIGNMENT' and post.dueDate != null"
-                                     th:text="'Due ' + ${post.dueDate}">
-                                    Due date
-                                </div>
-
-                                <div class="post-meta"
-                                     th:if="${post.type} == 'RESOURCE'">
-                                    Resource
-                                </div>
-                            </div>
-
-                            <div class="post-controls">
-                                <button class="toggle-btn" type="button" onclick="togglePost(this)" aria-label="Toggle post">▽</button>
-                                <div class="flag homework" th:if="${post.type} == 'ASSIGNMENT'" title="Homework"></div>
-                                <div class="flag resource" th:if="${post.type} == 'RESOURCE'" title="Resources"></div>
-                            </div>
-                        </div>
-
-                        <div class="post-body">
-                            <p class="post-text" th:text="${post.description}">Post description...</p>
-
-                            <div class="attachments"
-                                 th:if="${post.attachments != null && !#lists.isEmpty(post.attachments)}">
-                                <div class="attachment-tile" th:each="a : ${post.attachments}">
-                                    <div style="font-weight:800;" th:text="${a.type}">FILE</div>
-                                    <div th:text="${a.name}">example.pdf</div>
-                                </div>
-                            </div>
-
-                            <div class="post-actions">
-                                <form th:if="${role == 'STUDENT' and post.type == 'ASSIGNMENT'}"
-                                      method="post"
-                                      th:action="@{/assignments/submit}">
-                                    <input type="hidden" name="assignmentId" th:value="${post.id}" />
-                                    <button class="pill-btn" type="submit">Upload Work</button>
-                                </form>
-
-                                <a th:if="${role == 'TEACHER' and post.type == 'ASSIGNMENT'}"
-                                   class="pill-btn"
-                                   th:href="@{/assignments/submissions(assignmentId=${post.id})}">
-                                    View Work
-                                </a>
-
-                                <a th:if="${post.type} == 'RESOURCE'}"
-                                   class="pill-btn"
-                                   th:href="@{/resources/view(resourceId=${post.id})}">
-                                    Open
-                                </a>
-                            </div>
-                        </div>
-                    </article>
-                </section>
-
-                <!-- RIGHT: lined space -->
-                <aside class="right-space" aria-hidden="true"></aside>
+                <div class="right" th:if="${isStudent}">
+                    <span class="help">Status shown per assignment.</span>
+                </div>
             </div>
 
-            <!-- Post Creator (hidden panel, opens from Manage) -->
-            <section id="postCreator" class="creator" aria-hidden="true">
-                <div class="topbar">
-                    <span>Create Post</span>
-                    <span class="close-x" onclick="closePostCreator()">×</span>
+            <section class="stream">
+                <div th:if="${posts == null or #lists.isEmpty(posts)}" class="empty-msg">
+                    There are no posts in this classroom yet.
                 </div>
 
-                <div class="content">
-                    <div class="block">
-                        <div class="row">
-                            <label for="pcTitle">Title</label>
-                            <input id="pcTitle" type="text" placeholder="..." />
+                <article th:each="post : ${posts}"
+                         class="post-note"
+                         th:attr="data-type=${post.postType}"
+                         th:classappend="${post.postType == T(com.binder.demo.classroom.PostType).RESOURCE} ? ' is-resource' : ''">
+
+                    <div class="post-note-header">
+                        <div>
+                            <h2 class="post-note-title" th:text="${post.title}">Title</h2>
+                            <div class="post-note-meta">
+                                <span th:text="${post.postType}">ASSIGNMENT</span>
+                                <span th:if="${post.postType.name() == 'ASSIGNMENT' and post.dueDate != null}">
+                                    • <span th:text="'Due ' + ${#temporals.format(post.dueDate, 'yyyy-MM-dd HH:mm')}"></span>
+                                </span>
+                            </div>
                         </div>
+
+                        <div th:replace="fragments/post-controls :: postHeaderControls(post=${post}, classroom=${classroom}, isTeacher=${isTeacher})"></div>
                     </div>
 
-                    <div class="block">
-                        <div class="row">
-                            <label for="pcType">Type</label>
-                            <select id="pcType">
-                                <option value="ASSIGNMENT">Homework</option>
-                                <option value="RESOURCE">Resources</option>
-                            </select>
-                        </div>
+                    <div class="post-note-body" th:text="${post.description}">Description</div>
+
+                    <!-- Resource attachments (resources are uploads) -->
+                    <div th:if="${post.attachments != null and !#lists.isEmpty(post.attachments)}"
+                         class="attachment-list">
+                        <strong>Attachments:</strong>
+                        <ul>
+                            <li th:each="att : ${post.attachments}">
+                                <a class="attachment-link"
+                                   th:href="@{/attachments/{id}(id=${att.id})}"
+                                   th:text="${att.filename} ?: 'Download file'">
+                                    Download file
+                                </a>
+                                <span class="help" th:if="${att.sizeBytes != null}"
+                                      th:text="' • ' + ${att.sizeBytes} + ' bytes'"></span>
+                            </li>
+                        </ul>
                     </div>
 
-                    <div class="desc-label">Description</div>
-                    <div class="desc-wrap">
-                        <textarea id="pcDesc" placeholder="..."></textarea>
-                    </div>
-
-                    <div class="actions">
-                        <button class="pill-btn" type="button" onclick="submitPost()">Create</button>
-                    </div>
-                </div>
+                    <div th:replace="fragments/post-controls :: postActions(post=${post}, classroom=${classroom}, submittedPostIds=${submittedPostIds}, isTeacher=${isTeacher}, isStudent=${isStudent})"></div>
+                </article>
             </section>
-
         </div>
+        <div th:replace="fragments/classroom-modals :: postCreateModal"></div>
+        <div th:replace="fragments/classroom-modals :: postEditModal"></div>
+        <div th:replace="fragments/classroom-modals :: submitModal"></div>
+        <div th:replace="fragments/classroom-modals :: classroomEditModal"></div>
     </main>
 </div>
 
-<script>
-    function openManage(){
-        const main = document.getElementById('main');
-        const side = document.getElementById('manageSide');
-        main.classList.add('manage-open');
-        side.setAttribute('aria-hidden','false');
-    }
-
-    function closeManage(){
-        const main = document.getElementById('main');
-        const side = document.getElementById('manageSide');
-        main.classList.remove('manage-open');
-        side.setAttribute('aria-hidden','true');
-        closePostCreator();
-    }
-
-    function toggleManage(){
-        const main = document.getElementById('main');
-        if (main.classList.contains('manage-open')) closeManage();
-        else openManage();
-    }
-
-    function togglePost(btn){
-        const post = btn.closest('.post');
-        post.classList.toggle('is-open');
-        btn.textContent = post.classList.contains('is-open') ? '▽' : '▷';
-    }
-
-    function openPostCreator(){
-        openManage();
-        const c = document.getElementById('postCreator');
-        c.classList.add('is-open');
-        c.setAttribute('aria-hidden','false');
-        c.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    function closePostCreator(){
-        const c = document.getElementById('postCreator');
-        if (!c) return;
-        c.classList.remove('is-open');
-        c.setAttribute('aria-hidden','true');
-    }
-
-    function openClassEditor(){
-        alert('Edit Class (hook this to your edit flow)');
-    }
-
-    function submitPost(){
-        alert('Create Post (hook this to your backend)');
-    }
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeManage();
-    });
-</script>
+<script th:src="@{/js/classroom.js(v=${#dates.createNow().time})}" src="/js/classroom.js"></script>
 </body>
 </html>

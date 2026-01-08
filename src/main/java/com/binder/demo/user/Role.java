@@ -1,6 +1,6 @@
 package com.binder.demo.user;
 
-public enum ROLE {
+public enum Role {
     TEACHER,
     STUDENT
 }

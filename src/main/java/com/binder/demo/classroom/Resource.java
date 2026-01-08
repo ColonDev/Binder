@@ -1,23 +1,44 @@
 package com.binder.demo.classroom;
 
-import java.time.Instant;
+import com.binder.demo.attachments.Attachment;
+import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
+
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
-/**
- * Generic container class representing a resource post in a classroom.
- */
+@Entity
+@Table(name = "resources")
 public class Resource extends ClassroomPost {
 
-    public Resource() {setPostType(PostType.RESOURCE);
+    @Id
+    @UuidGenerator
+    @Column(name = "resource_id", nullable = false)
+    private UUID resourceId;
+
+    @ManyToMany
+    @JoinTable(
+            name = "resource_attachments",
+            joinColumns = @JoinColumn(name = "resource_id"),
+            inverseJoinColumns = @JoinColumn(name = "attachment_id")
+    )
+    private Set<Attachment> attachments = new HashSet<>();
+
+    public Resource() {
+        setPostType(PostType.RESOURCE);
     }
 
-    public Resource(UUID resourceId, UUID classId, String title, String description, Instant createdTime, UUID creatorTeacherId) {
+    @PostLoad
+    void postLoad() {
         setPostType(PostType.RESOURCE);
-        setId(resourceId);
-        setClassId(classId);
-        setTitle(title);
-        setDescription(description);
-        setCreatedTime(createdTime);
-        setCreatorTeacherId(creatorTeacherId);
+    }
+
+    public UUID getResourceId() { return resourceId; }
+    public void setResourceId(UUID resourceId) { this.resourceId = resourceId; }
+
+    public Set<Attachment> getAttachments() { return attachments; }
+    public void setAttachments(Set<Attachment> attachments) {
+        this.attachments = (attachments == null) ? new HashSet<>() : attachments;
     }
 }

@@ -6,38 +6,24 @@
     <title>Dashboard - Binder</title>
 
     <link rel="stylesheet" th:href="@{/css/base.css}" />
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}" />
+    <link rel="stylesheet" th:href="@{/css/dashboard.css(v=${#dates.createNow().time})}" href="/css/dashboard.css">
 </head>
 
 <body>
 <div class="app">
-    <aside class="sidebar">
-        <a class="nav-btn is-active" href="/dashboard">Home</a>
-        <a class="nav-btn" href="/todo">To-Do</a>
-        <a class="nav-btn" href="/flashcards">Flashcard</a>
-        <a class="nav-btn" href="/progress">Progress</a>
-        <a class="nav-btn" href="/messages">Messages</a>
-
-        <div class="sidebar-spacer"></div>
-
-        <div class="profile-card">
-            <div class="profile-line" th:text="${name}">%ACCOUNTNAME%</div>
-            <div class="profile-line" th:text="${role}">%ROLE%</div>
-            <div class="profile-actions">
-                <a class="logout" href="/logout">Logout</a>
-            </div>
-        </div>
-    </aside>
+    <div th:replace="fragments/sidebar :: sidebar('dashboard')"></div>
 
     <main id="main"
           class="main"
-          th:classappend="${role == 'TEACHER'} ? ' has-ribbon' : ''">
+          th:classappend="${#strings.toString(role) == 'TEACHER'} ? ' has-ribbon' : ''">
 
-        <div class="ribbon" th:if="${role == 'TEACHER'}" onclick="toggleManage()">Manage</div>
+        <div class="ribbon"
+             th:if="${#strings.toString(role) == 'TEACHER'}"
+             onclick="toggleManage()">Manage</div>
 
         <aside id="manageSide" class="manage-side" aria-hidden="true">
             <div class="manage-inner">
-                <button class="new-class-btn" type="button" onclick="openCreator()">New Class</button>
+                <button class="btn btn-primary" type="button" onclick="openModal('classroomModal')">New Class</button>
             </div>
         </aside>
 
@@ -57,53 +43,36 @@
                            class="note"
                            th:classappend="${#strings.arraySplit('yellow,green,blue,purple,pink', ',')[T(java.lang.Math).abs(classroom.classId.hashCode()) % 5]}">
 
-                            <h2 class="note-title" th:text="${classroom.name}">Class name</h2>
+                            <h2 class="note-title"
+                                th:text="${#strings.abbreviate(classroom.name, 24)}"
+                                th:attr="title=${classroom.name}">
+                                Class name
+                            </h2>
+
                             <p class="note-body" th:text="${classroom.description} ?: ''">Description</p>
                         </a>
                     </div>
                 </div>
             </div>
-
-            <section id="creator" class="creator" aria-hidden="true">
-                <div class="topbar">
-                    <span>Classroom Creator</span>
-                    <span class="close-x" onclick="closeCreator()">×</span>
-                </div>
-
-                <div class="content">
-
-                    <div class="block">
-                        <div class="row">
-                            <label for="ccName">Classroom Name</label>
-                            <input id="ccName" type="text" name="name" placeholder="..." />
-                        </div>
-                    </div>
-
-                    <div class="desc-label">Description</div>
-                    <div class="textarea-wrap">
-                        <label for="ccDesc"></label><textarea id="ccDesc" name="description" placeholder="..."></textarea>
-                    </div>
-
-                    <div class="block">
-                        <label for="ccStudents">Student List (emails)</label>
-                        <textarea id="ccStudents" placeholder="Enter emails separated by commas or spaces..."></textarea>
-                    </div>
-
-                    <div class="block">
-                        <label for="ccTeachers">Teachers</label>
-                        <textarea id="ccTeachers" placeholder="Enter emails separated by commas or spaces..."></textarea>
-                    </div>
-
-                    <div class="actions">
-                        <button class="pill-btn" type="button" onclick="saveClass()">Create Class</button>
-                    </div>
-                </div>
-            </section>
         </div>
+
+        <div th:replace="fragments/dashboard-modals :: classroomModal"></div>
     </main>
 </div>
 
 <script>
+    function openModal(id){
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.setAttribute('aria-hidden','false');
+    }
+
+    function closeModal(id){
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.setAttribute('aria-hidden','true');
+    }
+
     function openManage(){
         const main = document.getElementById('main');
         const side = document.getElementById('manageSide');
@@ -116,7 +85,7 @@
         const side = document.getElementById('manageSide');
         main.classList.remove('manage-open');
         side.setAttribute('aria-hidden','true');
-        closeCreator();
+        closeModal('classroomModal');
     }
 
     function toggleManage(){
@@ -125,68 +94,10 @@
         else openManage();
     }
 
-    function openCreator(){
-        const main = document.getElementById('main');
-        const side = document.getElementById('manageSide');
-
-        main.classList.add('manage-open');
-        side.setAttribute('aria-hidden','false');
-        main.classList.add('creator-open');
-
-        document.getElementById('ccName').value = '';
-        document.getElementById('ccDesc').value = '';
-        document.getElementById('ccStudents').value = '';
-        document.getElementById('ccTeachers').value = '';
-
-        const c = document.getElementById('creator');
-        c.classList.add('is-open');
-        c.setAttribute('aria-hidden','false');
-
-        c.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    function closeCreator(){
-        const c = document.getElementById('creator');
-        c.classList.remove('is-open');
-        c.setAttribute('aria-hidden','true');
-
-        const main = document.getElementById('main');
-        main.classList.remove('creator-open');
-    }
-
-    function saveClass(){
-        const name = document.getElementById('ccName').value;
-        const desc = document.getElementById('ccDesc').value;
-        const students = document.getElementById('ccStudents').value;
-        const teachers = document.getElementById('ccTeachers').value;
-
-        const form = document.createElement('form');
-        form.method = 'post';
-        form.action = '/classrooms/create';
-
-        const i1 = document.createElement('input');
-        i1.type = 'hidden'; i1.name = 'name'; i1.value = name;
-
-        const i2 = document.createElement('input');
-        i2.type = 'hidden'; i2.name = 'description'; i2.value = desc;
-
-        const i3 = document.createElement('input');
-        i3.type = 'hidden'; i3.name = 'studentEmails'; i3.value = students;
-
-        const i4 = document.createElement('input');
-        i4.type = 'hidden'; i4.name = 'teacherEmails'; i4.value = teachers;
-
-        form.appendChild(i1);
-        form.appendChild(i2);
-        form.appendChild(i3);
-        form.appendChild(i4);
-        document.body.appendChild(form);
-        form.submit();
-    }
-
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeManage();
     });
 </script>
+
 </body>
 </html>

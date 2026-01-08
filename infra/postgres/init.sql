@@ -4,7 +4,7 @@ CREATE TABLE users (
                        user_id    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                        email      TEXT NOT NULL UNIQUE,
                        full_name  TEXT NOT NULL,
-                       role       TEXT NOT NULL CHECK (role IN ('STUDENT', 'TEACHER', 'ADMIN')),
+                       role       TEXT NOT NULL CHECK (role IN ('STUDENT', 'TEACHER')),
                        created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -81,23 +81,22 @@ CREATE TABLE resource_attachments (
 );
 
 CREATE TABLE assignment_submissions (
-                                        assignment_id   UUID NOT NULL REFERENCES assignments(assignment_id) ON DELETE CASCADE,
-                                        student_id      UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-                                        submission_time TIMESTAMP NOT NULL DEFAULT NOW(),
-                                        attachment_id   UUID REFERENCES attachments(attachment_id) ON DELETE SET NULL,
-                                        PRIMARY KEY (assignment_id, student_id)
+                                        submission_id    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                                        assignment_id    UUID NOT NULL REFERENCES assignments(assignment_id) ON DELETE CASCADE,
+                                        student_id       UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+                                        submission_time  TIMESTAMP NOT NULL DEFAULT NOW(),
+                                        attachment_id    UUID REFERENCES attachments(attachment_id) ON DELETE SET NULL,
+                                        UNIQUE (assignment_id, student_id)
 );
 
+
 CREATE TABLE grades (
-                        assignment_id UUID NOT NULL,
-                        student_id    UUID NOT NULL,
+                        submission_id UUID PRIMARY KEY REFERENCES assignment_submissions(submission_id) ON DELETE CASCADE,
                         teacher_id    UUID NOT NULL REFERENCES users(user_id),
                         marks_scored  INT CHECK (marks_scored >= 0),
-                        feedback      TEXT,
-                        PRIMARY KEY (assignment_id, student_id),
-                        FOREIGN KEY (assignment_id, student_id)
-                            REFERENCES assignment_submissions(assignment_id, student_id) ON DELETE CASCADE
+                        feedback      TEXT
 );
+
 
 CREATE TABLE flashcard_sets (
                                 flashcard_set_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

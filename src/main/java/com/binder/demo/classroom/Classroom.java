@@ -1,29 +1,44 @@
 package com.binder.demo.classroom;
 
+import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
+
+import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Represents a classroom within the application.
- *
- * A Classroom is created by a teacher and
- * contains basic info used to identify and describe the class.
- */
+@Entity
+@Table(name = "classrooms")
 public class Classroom {
-    /** Unique identifier for the classroom */
+
+    @Id
+    @UuidGenerator
+    @Column(name = "class_id", nullable = false)
     private UUID classId;
-    /** Human-readable name of the classroom */
+
+    @Column(name = "name", nullable = false)
     private String name;
-    /** Optional description of the classroom */
+
+    @Column(name = "description")
     private String description;
-    /** Unique identifier of the user who created the classroom */
-    private UUID creatorId;
+
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
+    @PrePersist
+    void prePersist() {
+        if (createdAt == null) createdAt = Instant.now();
+    }
 
     public UUID getClassId() { return classId; }
     public void setClassId(UUID classId) { this.classId = classId; }
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    public UUID getCreatorId() { return creatorId; }
-    public void setCreatorId(UUID creatorId) { this.creatorId = creatorId; }
+
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
 }
