@@ -1,32 +1,30 @@
 package com.binder.demo.classroom;
 
-import com.binder.demo.attachments.Attachment;
+import jakarta.persistence.*;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
-/**
- * Generic container class representing a post in a classroom.
- */
+@MappedSuperclass
 public abstract class ClassroomPost {
 
-    private UUID id;
+    @Column(name = "class_id", nullable = false)
     private UUID classId;
+
+    @Column(name = "title", nullable = false)
     private String title;
+
+    @Column(name = "description")
     private String description;
-    private Instant createdTime;
+
+    @Column(name = "creator_teacher_id", nullable = false)
     private UUID creatorTeacherId;
 
-    /* Used by the UI to decide how to render the post */
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
+    @Transient
     private PostType postType;
-
-    /* Populated by the service when fetching posts */
-    private List<Attachment> attachments = new ArrayList<>();
-
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
 
     public UUID getClassId() { return classId; }
     public void setClassId(UUID classId) { this.classId = classId; }
@@ -37,17 +35,12 @@ public abstract class ClassroomPost {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public Instant getCreatedTime() { return createdTime; }
-    public void setCreatedTime(Instant createdTime) { this.createdTime = createdTime; }
-
     public UUID getCreatorTeacherId() { return creatorTeacherId; }
     public void setCreatorTeacherId(UUID creatorTeacherId) { this.creatorTeacherId = creatorTeacherId; }
 
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
     public PostType getPostType() { return postType; }
     protected void setPostType(PostType postType) { this.postType = postType; }
-
-    public List<Attachment> getAttachments() { return attachments; }
-    public void setAttachments(List<Attachment> attachments) {
-        this.attachments = (attachments == null) ? new ArrayList<>() : attachments;
-    }
 }

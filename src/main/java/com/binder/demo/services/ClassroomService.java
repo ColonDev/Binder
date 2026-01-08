@@ -1,9 +1,9 @@
 package com.binder.demo.services;
 
 import com.binder.demo.classroom.Classroom;
-import com.binder.demo.user.ROLE;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
+import com.binder.demo.user.Role;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,66 +11,54 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-
-
 @Service
 public class ClassroomService {
 
-    private final JdbcTemplate jdbcTemplate;
+    @PersistenceContext
+    private EntityManager em;
+
     private final UserService userService;
 
-    private static final RowMapper<Classroom> CLASSROOM_ROW_MAPPER = (rs, rowNum) -> {
-        Classroom classroom = new Classroom();
-        classroom.setClassId(rs.getObject("class_id", UUID.class));
-        classroom.setName(rs.getString("name"));
-        classroom.setDescription(rs.getString("description"));
-        return classroom;
-    };
-
-    public ClassroomService(JdbcTemplate jdbcTemplate, UserService userService) {
-        this.jdbcTemplate = jdbcTemplate;
+    public ClassroomService(UserService userService) {
         this.userService = userService;
     }
 
     @Transactional
-    public void createClass(Classroom classroom) {
-        if (classroom.getClassId() == null) {
-            classroom.setClassId(UUID.randomUUID());
+    public Classroom createClass(Classroom classroom, UUID creatorTeacherId) {
+        if (classroom == null) throw new IllegalArgumentException("classroom is null");
+
+        em.persist(classroom);
+        em.flush(); // ensures classId is generated now
+
+        // link the creator teacher so it shows up on their dashboard
+        if (creatorTeacherId != null) {
+            userService.addTeacherToClass(classroom.getClassId(), creatorTeacherId);
         }
 
-        jdbcTemplate.update(
-                "INSERT INTO classrooms (class_id, name, description) VALUES (?, ?, ?)",
-                classroom.getClassId(),
-                classroom.getName(),
-                classroom.getDescription()
-        );
-
-        if (classroom.getCreatorId() != null) {
-            userService.addTeacherToClass(classroom.getClassId(), classroom.getCreatorId());
-        }
+        return classroom;
     }
 
     public Optional<Classroom> getClassById(UUID classId) {
-        String sql = "SELECT class_id, name, description FROM classrooms WHERE class_id = ?";
-        return jdbcTemplate.query(sql, CLASSROOM_ROW_MAPPER, classId).stream().findFirst();
+        if (classId == null) return Optional.empty();
+        return Optional.ofNullable(em.find(Classroom.class, classId));
     }
 
     public List<Classroom> getAllClassrooms() {
-        String sql = "SELECT class_id, name, description FROM classrooms";
-        return jdbcTemplate.query(sql, CLASSROOM_ROW_MAPPER);
+        return em.createQuery("select c from Classroom c order by c.createdAt desc", Classroom.class)
+                .getResultList();
     }
 
+    @Transactional
     public void updateClass(Classroom classroom) {
-        jdbcTemplate.update(
-                "UPDATE classrooms SET name = ?, description = ? WHERE class_id = ?",
-                classroom.getName(),
-                classroom.getDescription(),
-                classroom.getClassId()
-        );
+        if (classroom == null) return;
+        em.merge(classroom);
     }
 
+    @Transactional
     public void removeClass(UUID classId) {
-        jdbcTemplate.update("DELETE FROM classrooms WHERE class_id = ?", classId);
+        if (classId == null) return;
+        Classroom c = em.find(Classroom.class, classId);
+        if (c != null) em.remove(c);
     }
 
     public void enrollStudentsByEmails(UUID classId, String emails) {
@@ -81,24 +69,61 @@ public class ClassroomService {
         userService.enrollTeachersByEmails(classId, emails);
     }
 
-    public boolean isUserInClass(UUID classId, UUID userId, ROLE role) {
+    public List<String> enrollStudentsByEmailsWithValidation(UUID classId, String emails) {
+        return userService.enrollUsersByEmailsWithRoleValidation(classId, emails, Role.STUDENT);
+    }
+
+    public List<String> enrollTeachersByEmailsWithValidation(UUID classId, String emails) {
+        return userService.enrollUsersByEmailsWithRoleValidation(classId, emails, Role.TEACHER);
+    }
+
+    public boolean isUserInClass(UUID classId, UUID userId, Role role) {
         return userService.isUserInClass(classId, userId, role);
     }
 
-    /*
-        Returns every classroom the user is linked to.
-        Students are linked through enrollments.
-        Teachers are linked through classroom_teachers.
-     */
-    public List<Classroom> getClassroomsForUser(UUID userId) {
-        String sql =
-                "SELECT DISTINCT c.class_id, c.name, c.description " +
-                        "FROM classrooms c " +
-                        "LEFT JOIN enrollments e ON c.class_id = e.class_id " +
-                        "LEFT JOIN classroom_teachers ct ON c.class_id = ct.class_id " +
-                        "WHERE e.student_id = ? OR ct.teacher_id = ?";
+    public List getClassroomsForUser(UUID userId) {
+        if (userId == null) return List.of();
 
-        return jdbcTemplate.query(sql, CLASSROOM_ROW_MAPPER, userId, userId);
+        return em.createNativeQuery("""
+            SELECT DISTINCT c.*
+            FROM classrooms c
+            LEFT JOIN enrollments e ON c.class_id = e.class_id
+            LEFT JOIN classroom_teachers ct ON c.class_id = ct.class_id
+            WHERE e.student_id = :userId OR ct.teacher_id = :userId
+            ORDER BY c.created_at DESC
+            """, Classroom.class)
+                .setParameter("userId", userId)
+                .getResultList();
     }
 
+    public List<String> getEnrolledStudentEmails(UUID classId) {
+        if (classId == null) return List.of();
+
+        return em.createNativeQuery("""
+            SELECT u.email
+            FROM users u
+            JOIN enrollments e ON u.user_id = e.student_id
+            WHERE e.class_id = :classId
+            """, String.class)
+                .setParameter("classId", classId)
+                .getResultList();
+    }
+
+    public List<String> getEnrolledTeacherEmails(UUID classId) {
+        if (classId == null) return List.of();
+
+        return em.createNativeQuery("""
+            SELECT u.email
+            FROM users u
+            JOIN classroom_teachers ct ON u.user_id = ct.teacher_id
+            WHERE ct.class_id = :classId
+            """, String.class)
+                .setParameter("classId", classId)
+                .getResultList();
+    }
+
+    @Transactional
+    public void removeStudentFromClassByEmail(UUID classId, String email) {
+        userService.removeStudentFromClassByEmail(classId, email);
+    }
 }

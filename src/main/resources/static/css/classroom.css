@@ -1,5 +1,6 @@
 /* CLASSROOM SPECIFIC STYLES */
 
+/* Layout */
 .classroom-grid{
     display:grid;
     grid-template-columns: minmax(520px, 1fr) minmax(260px, 420px);
@@ -28,6 +29,8 @@
     border:2px solid rgba(0,0,0,.35);
     background: rgba(242,229,90,.55); /* default yellow-ish */
     box-shadow: 0 3px 0 rgba(0,0,0,.18);
+    border-radius:14px;
+    overflow:hidden;
 }
 
 .post.is-resource{
@@ -36,9 +39,10 @@
 
 .post-header{
     display:flex;
-    align-items:center;
+    align-items:flex-start;
     justify-content:space-between;
-    padding:10px 12px;
+    gap:12px;
+    padding:12px 14px;
     border-bottom:2px solid rgba(0,0,0,.18);
     box-sizing:border-box;
 }
@@ -54,9 +58,10 @@
     font-size:14px;
     font-weight:700;
     opacity:.85;
-    margin-top:4px;
+    margin-top:6px;
 }
 
+/* Controls */
 .post-controls{
     display:flex;
     align-items:center;
@@ -64,21 +69,77 @@
     user-select:none;
 }
 
+/* Make ALL buttons white (keeps your border look consistent) */
+button,
+.btn,
+.btn-primary,
+.btn-danger,
+.icon-btn,
 .toggle-btn{
-    width:26px;height:26px;
+    background:#fff !important;
+    color:#111;
     border:2px solid rgba(0,0,0,.35);
-    background:#fff;
-    border-radius:6px;
+    border-radius:10px;
+    box-shadow: 0 2px 0 rgba(0,0,0,.14);
     cursor:pointer;
+    font-weight:800;
+}
+
+/* size consistency */
+.btn,
+.btn-primary,
+.btn-danger{
+    padding:8px 12px;
+    line-height:1;
+}
+
+/* icon buttons */
+.icon-btn,
+.toggle-btn{
+    width:30px;
+    height:30px;
+    padding:0;
     display:flex;
     align-items:center;
     justify-content:center;
     font-weight:900;
-    line-height:1;
 }
 
+/* hover/active states */
+button:hover,
+.btn:hover,
+.btn-primary:hover,
+.btn-danger:hover,
+.icon-btn:hover,
+.toggle-btn:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 3px 0 rgba(0,0,0,.16);
+}
+
+button:active,
+.btn:active,
+.btn-primary:active,
+.btn-danger:active,
+.icon-btn:active,
+.toggle-btn:active{
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 rgba(0,0,0,.12);
+}
+
+button:disabled,
+.btn:disabled,
+.btn-primary:disabled,
+.btn-danger:disabled,
+.icon-btn:disabled,
+.toggle-btn:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+    transform:none;
+}
+
+/* Post body */
 .post-body{
-    padding:12px;
+    padding:12px 14px;
     box-sizing:border-box;
     display:none; /* collapsed by default */
 }
@@ -90,15 +151,16 @@
 .post-text{
     margin:0 0 10px 0;
     font-size:14px;
-    line-height:1.35;
+    line-height:1.45;
     white-space:pre-wrap;
 }
 
+/* Attachments */
 .attachments{
     display:flex;
     flex-wrap:wrap;
     gap:10px;
-    margin-top:8px;
+    margin-top:10px;
 }
 
 .attachment-tile{
@@ -106,11 +168,13 @@
     border:2px solid rgba(0,0,0,.18);
     background:#fff;
     box-shadow:0 2px 0 rgba(0,0,0,.12);
-    padding:8px;
+    padding:10px;
     box-sizing:border-box;
     font-size:12px;
+    border-radius:12px;
 }
 
+/* Actions row */
 .post-actions{
     margin-top:12px;
     display:flex;
@@ -118,7 +182,6 @@
     flex-wrap:wrap;
     justify-content:flex-end;
 }
-
 
 /* Small “flags” on the right edge */
 .flag{
@@ -128,6 +191,7 @@
     border:2px solid rgba(0,0,0,.18);
     box-sizing:border-box;
     margin-left:10px;
+    border-radius:10px 10px 12px 12px;
 }
 .flag::after{
     content:"";
@@ -146,6 +210,81 @@
 .flag.resource{ background:#70d6ff; }
 .flag.resource::after{ border-top-color:#70d6ff; }
 
+/* SCROLLING STUDENT LIST (classroom manage panel) */
+.cm-list{
+    max-height:220px;            /* keeps list compact; scrolls once it overflows */
+    overflow-y:auto;
+    padding-right:6px;           /* space for scrollbar */
+    overscroll-behavior:contain; /* prevents page scroll chaining */
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:6px;
+}
+
+/* nicer scrollbar (optional, safe) */
+.cm-list::-webkit-scrollbar{
+    width:10px;
+}
+.cm-list::-webkit-scrollbar-track{
+    background:rgba(0,0,0,.06);
+    border-radius:10px;
+}
+.cm-list::-webkit-scrollbar-thumb{
+    background:rgba(0,0,0,.18);
+    border-radius:10px;
+    border:2px solid rgba(255,255,255,.9);
+}
+
+/* make chips breathe a bit */
+.cm-chip{
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:3px 6px;
+    background:#f5f5f5;
+    border:2px solid rgba(0,0,0,.18);
+    flex-wrap:nowrap;
+    min-height:28px;
+}
+.cm-chip-text{
+    flex:1;
+    min-width:0;
+    overflow-wrap:anywhere;
+    line-height:1.1;
+    font-size:13px;
+}
+.cm-chip form{
+    display:flex;
+    align-items:center;
+    margin:0;
+}
+.cm-chip .icon-btn{
+    width:24px;
+    height:24px;
+}
+
+.cm-addrow{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:4px;
+}
+.cm-addrow .input{
+    flex:1;
+    min-width:0;
+    font-size:14px;
+    padding:6px 8px;
+}
+.cm-addrow .btn{
+    width:auto;
+    padding:6px 10px;
+    font-size:14px;
+}
+
+/* Mobile */
 @media (max-width: 980px){
     .classroom-grid{
         grid-template-columns: 1fr;
@@ -154,5 +293,8 @@
         min-height:180px;
         border-left:none;
         padding-left:0;
+    }
+    .cm-list{
+        max-height:220px;
     }
 }

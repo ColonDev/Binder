@@ -1,23 +1,46 @@
 package com.binder.demo.classroom;
 
+import com.binder.demo.attachments.Attachment;
+import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
+
 import java.time.Instant;
 import java.util.UUID;
 
-/*
-    AssignmentSubmission
-    Represents a student's submission for an assignment.
-    Backed by the assignment_submissions table.
-
-    Grade is optional and can be populated by the service.
- */
+@Entity
+@Table(name = "assignment_submissions",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"assignment_id", "student_id"}))
 public class AssignmentSubmission {
 
+    @Id
+    @UuidGenerator
+    @Column(name = "submission_id", nullable = false)
+    private UUID submissionId;
+
+    @Column(name = "assignment_id", nullable = false)
     private UUID assignmentId;
+
+    @Column(name = "student_id", nullable = false)
     private UUID studentId;
-    private UUID attachmentId;
+
+    @Column(name = "submission_time", nullable = false)
     private Instant submissionTime;
 
-    private Grade grade; // null if ungraded
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "attachment_id")
+    private Attachment attachment;
+
+    @OneToOne(mappedBy = "submission", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL, optional = true)
+    private Grade grade;
+
+    @PrePersist
+    void prePersist() {
+        if (submissionTime == null) submissionTime = Instant.now();
+    }
+
+    public UUID getSubmissionId() { return submissionId; }
+    public void setSubmissionId(UUID submissionId) { this.submissionId = submissionId; }
 
     public UUID getAssignmentId() { return assignmentId; }
     public void setAssignmentId(UUID assignmentId) { this.assignmentId = assignmentId; }
@@ -25,11 +48,11 @@ public class AssignmentSubmission {
     public UUID getStudentId() { return studentId; }
     public void setStudentId(UUID studentId) { this.studentId = studentId; }
 
-    public UUID getAttachmentId() { return attachmentId; }
-    public void setAttachmentId(UUID attachmentId) { this.attachmentId = attachmentId; }
-
     public Instant getSubmissionTime() { return submissionTime; }
     public void setSubmissionTime(Instant submissionTime) { this.submissionTime = submissionTime; }
+
+    public Attachment getAttachment() { return attachment; }
+    public void setAttachment(Attachment attachment) { this.attachment = attachment; }
 
     public Grade getGrade() { return grade; }
     public void setGrade(Grade grade) { this.grade = grade; }

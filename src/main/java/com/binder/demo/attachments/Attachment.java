@@ -1,25 +1,42 @@
 package com.binder.demo.attachments;
 
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
-/*
-    Attachment
-    Represents an uploaded file, image, or link stored in the attachments table.
- */
+@Entity
+@Table(name = "attachments")
 public class Attachment {
 
+    @Id
+    @Column(name = "attachment_id", nullable = false)
     private UUID attachmentId;
-    private String attachmentType;   // e.g. FILE / LINK / IMAGE (matches DB constraint)
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "attachment_type", nullable = false)
+    private AttachmentType attachmentType;
+
+    @Column(name = "url", nullable = false)
     private String url;
+
+    @Column(name = "uploaded_at", nullable = false)
     private Instant uploadedAt;
+
+    @Column(name = "user_owner", nullable = false)
     private UUID userOwner;
+
+    // If you want Hibernate to generate UUIDs in Java (instead of relying on DB default):
+    @PrePersist
+    void prePersist() {
+        if (attachmentId == null) attachmentId = UUID.randomUUID();
+        if (uploadedAt == null) uploadedAt = Instant.now();
+    }
 
     public UUID getAttachmentId() { return attachmentId; }
     public void setAttachmentId(UUID attachmentId) { this.attachmentId = attachmentId; }
 
-    public String getAttachmentType() { return attachmentType; }
-    public void setAttachmentType(String attachmentType) { this.attachmentType = attachmentType; }
+    public AttachmentType getAttachmentType() { return attachmentType; }
+    public void setAttachmentType(AttachmentType attachmentType) { this.attachmentType = attachmentType; }
 
     public String getUrl() { return url; }
     public void setUrl(String url) { this.url = url; }

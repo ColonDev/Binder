@@ -25,39 +25,36 @@ public class ClassroomController {
         this.classroomService = classroomService;
     }
 
-    /**
-     * Handles classroom creation requests.
-     * @param name        name of the classroom
-     * @param description description of the classroom
-     * @param session     current HTTP session used to identify the user
-     * @return redirect to the dashboard after processing
-     */
     @PostMapping("/classrooms/create")
     public String handleCreateClassroom(@RequestParam String name,
                                         @RequestParam String description,
                                         @RequestParam(required = false) String studentEmails,
                                         @RequestParam(required = false) String teacherEmails,
                                         HttpSession session) {
+
         UUID userId = (UUID) session.getAttribute("userId");
         String role = (String) session.getAttribute("userRole");
 
-        if (userId != null && "TEACHER".equals(role)) {
-            Classroom classroom = new Classroom();
-            classroom.setName(name);
-            classroom.setDescription(description);
-            classroom.setCreatorId(userId);
-            classroomService.createClass(classroom);
+        if (userId == null || !"TEACHER".equals(role)) {
+            return "redirect:/dashboard";
+        }
 
-            if (studentEmails != null && !studentEmails.isBlank()) {
-                classroomService.enrollStudentsByEmails(classroom.getClassId(), studentEmails);
-            }
-            if (teacherEmails != null && !teacherEmails.isBlank()) {
-                classroomService.enrollTeachersByEmails(classroom.getClassId(), teacherEmails);
-            }
+        Classroom classroom = new Classroom();
+        classroom.setName(name);
+        classroom.setDescription(description);
+
+        Classroom saved = classroomService.createClass(classroom, userId);
+
+        if (studentEmails != null && !studentEmails.isBlank()) {
+            classroomService.enrollStudentsByEmails(saved.getClassId(), studentEmails);
+        }
+        if (teacherEmails != null && !teacherEmails.isBlank()) {
+            classroomService.enrollTeachersByEmails(saved.getClassId(), teacherEmails);
         }
 
         return "redirect:/dashboard";
     }
+
 
     /**
      * Retrieves all classrooms.
@@ -88,11 +85,70 @@ public class ClassroomController {
             model.addAttribute("classroom", classroom.get());
             model.addAttribute("name", session.getAttribute("userName"));
             model.addAttribute("role", session.getAttribute("userRole"));
-            // Add empty lists for posts to avoid null checks in thymeleaf if they aren't implemented yet
-            model.addAttribute("posts", List.of()); 
+            model.addAttribute("posts", List.of());
+            model.addAttribute("enrolledStudents", classroomService.getEnrolledStudentEmails(id));
+            model.addAttribute("enrolledTeachers", classroomService.getEnrolledTeacherEmails(id));
             return "classroom";
         }
         return "redirect:/dashboard";
+    }
+
+    @PostMapping("/classrooms/enroll")
+    public String handleEnrollStudents(@RequestParam UUID classId,
+                                       @RequestParam String studentEmails,
+                                       HttpSession session,
+                                       org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        UUID userId = (UUID) session.getAttribute("userId");
+        String role = (String) session.getAttribute("userRole");
+
+        if (userId != null && "TEACHER".equals(role)) {
+            if (classroomService.isUserInClass(classId, userId, com.binder.demo.user.Role.TEACHER)) {
+                List<String> mismatched = classroomService.enrollStudentsByEmailsWithValidation(classId, studentEmails);
+                if (!mismatched.isEmpty()) {
+                    redirectAttributes.addFlashAttribute("studentEnrollError",
+                            "These emails are not students: " + String.join(", ", mismatched));
+                }
+            }
+        }
+
+        return "redirect:/classrooms/" + classId;
+    }
+
+    @PostMapping("/classrooms/enroll-teachers")
+    public String handleEnrollTeachers(@RequestParam UUID classId,
+                                       @RequestParam String teacherEmails,
+                                       HttpSession session,
+                                       org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        UUID userId = (UUID) session.getAttribute("userId");
+        String role = (String) session.getAttribute("userRole");
+
+        if (userId != null && "TEACHER".equals(role)) {
+            if (classroomService.isUserInClass(classId, userId, com.binder.demo.user.Role.TEACHER)) {
+                List<String> mismatched = classroomService.enrollTeachersByEmailsWithValidation(classId, teacherEmails);
+                if (!mismatched.isEmpty()) {
+                    redirectAttributes.addFlashAttribute("teacherEnrollError",
+                            "These emails are not teachers: " + String.join(", ", mismatched));
+                }
+            }
+        }
+
+        return "redirect:/classrooms/" + classId;
+    }
+
+    @PostMapping("/classrooms/remove-student")
+    public String handleRemoveStudent(@RequestParam UUID classId,
+                                      @RequestParam String email,
+                                      HttpSession session) {
+        UUID userId = (UUID) session.getAttribute("userId");
+        String role = (String) session.getAttribute("userRole");
+
+        if (userId != null && "TEACHER".equals(role)) {
+            if (classroomService.isUserInClass(classId, userId, com.binder.demo.user.Role.TEACHER)) {
+                classroomService.removeStudentFromClassByEmail(classId, email);
+            }
+        }
+
+        return "redirect:/classrooms/" + classId;
     }
 
     /**
@@ -148,5 +204,3 @@ public class ClassroomController {
     }
 
 }
-
-
