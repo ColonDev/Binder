@@ -1,0 +1,432 @@
+/* CLASSROOM SPECIFIC STYLES */
+
+/* Layout */
+.classroom-grid{
+    display:grid;
+    grid-template-columns: minmax(520px, 1fr) minmax(260px, 420px);
+    gap:22px;
+    align-items:start;
+    margin-top:10px;
+}
+
+/* Left stream column (posts) */
+.stream{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+.stream-toolbar .select{
+    width:auto;
+    min-width:160px;
+}
+
+/* Right side is the lined "empty" area */
+.right-space{
+    min-height:520px;
+    border-left: 2px solid rgba(0,0,0,.12);
+    padding-left:18px;
+    box-sizing:border-box;
+}
+
+/* Post card styling */
+.post,
+.post-note{
+    border:2px solid rgba(0,0,0,.35);
+    background: rgba(242,229,90,.55); /* default yellow-ish */
+    box-shadow: 0 3px 0 rgba(0,0,0,.18);
+    border-radius:14px;
+    overflow:hidden;
+}
+
+.post.is-resource,
+.post-note.is-resource{
+    background: rgba(112,214,255,.35); /* blue-ish for resources */
+}
+
+.post-header,
+.post-note-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px 14px;
+    border-bottom:2px solid rgba(0,0,0,.18);
+    box-sizing:border-box;
+}
+
+.post-title,
+.post-note-title{
+    font-size:20px;
+    font-weight:800;
+    margin:0;
+    line-height:1.1;
+}
+
+.post-meta,
+.post-note-meta{
+    font-size:14px;
+    font-weight:700;
+    opacity:.85;
+    margin-top:6px;
+}
+
+/* Controls */
+.post-controls,
+.post-note-controls,
+.teacher-mini-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    user-select:none;
+}
+
+/* Make ALL buttons white (keeps your border look consistent) */
+button,
+.btn,
+.btn-primary,
+.btn-danger,
+.icon-btn,
+.toggle-btn{
+    background:#fff !important;
+    color:#111;
+    border:2px solid rgba(0,0,0,.35);
+    border-radius:10px;
+    box-shadow: 0 2px 0 rgba(0,0,0,.14);
+    cursor:pointer;
+    font-weight:800;
+}
+
+/* size consistency */
+.btn,
+.btn-primary,
+.btn-danger{
+    padding:8px 12px;
+    line-height:1;
+}
+
+/* icon buttons */
+.icon-btn,
+.toggle-btn{
+    width:30px;
+    height:30px;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:900;
+}
+
+/* hover/active states */
+button:hover,
+.btn:hover,
+.btn-primary:hover,
+.btn-danger:hover,
+.icon-btn:hover,
+.toggle-btn:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 3px 0 rgba(0,0,0,.16);
+}
+
+button:active,
+.btn:active,
+.btn-primary:active,
+.btn-danger:active,
+.icon-btn:active,
+.toggle-btn:active{
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 rgba(0,0,0,.12);
+}
+
+button:disabled,
+.btn:disabled,
+.btn-primary:disabled,
+.btn-danger:disabled,
+.icon-btn:disabled,
+.toggle-btn:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+    transform:none;
+}
+
+/* Post body */
+.post-body{
+    padding:12px 14px;
+    box-sizing:border-box;
+    display:none; /* collapsed by default */
+}
+
+.post.is-open .post-body{
+    display:block;
+}
+
+.post-note-body{
+    padding:12px 14px;
+    box-sizing:border-box;
+    font-size:14px;
+    line-height:1.5;
+    white-space:pre-wrap;
+}
+
+.post-attachments{
+    margin:0 14px 12px;
+    padding:10px;
+    border:2px solid rgba(0,0,0,.2);
+    border-radius:12px;
+    background:rgba(255,255,255,.6);
+}
+.post-attachments-title{
+    font-size:13px;
+    font-weight:800;
+    margin-bottom:8px;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+}
+.post-attachments-grid{
+    display:grid;
+    gap:10px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+.post-attachment{
+    background:#fff;
+    border:2px solid rgba(0,0,0,.2);
+    border-radius:12px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+}
+.post-attachment-preview{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#f3f3f3;
+    border-bottom:2px solid rgba(0,0,0,.12);
+    min-height:110px;
+    text-decoration:none;
+    color:inherit;
+}
+.post-attachment-image{
+    width:100%;
+    height:140px;
+    object-fit:cover;
+    display:block;
+}
+.post-attachment-file{
+    font-weight:800;
+    font-size:13px;
+    padding:10px;
+}
+.post-attachment-meta{
+    padding:8px 10px 10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+.post-attachment-name{
+    font-size:12px;
+    font-weight:700;
+    overflow-wrap:anywhere;
+}
+.post-attachment-link{
+    font-size:12px;
+    font-weight:800;
+    text-decoration:none;
+    color:#111;
+    background:#fff;
+    border:2px solid rgba(0,0,0,.2);
+    border-radius:999px;
+    padding:4px 10px;
+    width:max-content;
+}
+
+.post-text{
+    margin:0 0 10px 0;
+    font-size:14px;
+    line-height:1.45;
+    white-space:pre-wrap;
+}
+
+/* Actions row */
+.post-actions,
+.post-note-actions{
+    margin-top:12px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+}
+.post-note-actions{
+    padding:0 14px 12px;
+    margin-top:0;
+}
+
+.status-pill{
+    display:inline-flex;
+    align-items:center;
+    padding:6px 10px;
+    border-radius:999px;
+    border:2px solid rgba(0,0,0,.35);
+    font-size:12px;
+    font-weight:800;
+    background:#fff;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+}
+.status-pill.is-submitted{
+    background:#45f06a;
+}
+.status-pill.is-unsubmitted{
+    background:#ff99c8;
+}
+
+/* Small “flags” on the right edge */
+.flag{
+    width:34px;
+    height:54px;
+    position:relative;
+    border:2px solid rgba(0,0,0,.18);
+    box-sizing:border-box;
+    margin-left:10px;
+    border-radius:10px 10px 12px 12px;
+}
+.flag::after{
+    content:"";
+    position:absolute;
+    left:0; right:0;
+    bottom:-1px;
+    margin:auto;
+    width:0;height:0;
+    border-left:15px solid transparent;
+    border-right:15px solid transparent;
+    border-top:18px solid rgba(0,0,0,.0);
+}
+.flag.homework{ background:#7b2aa8; }
+.flag.homework::after{ border-top-color:#7b2aa8; }
+
+.flag.resource{ background:#70d6ff; }
+.flag.resource::after{ border-top-color:#70d6ff; }
+
+/* SCROLLING STUDENT LIST (classroom manage panel) */
+.cm-list{
+    max-height:220px;            /* keeps list compact; scrolls once it overflows */
+    overflow-y:auto;
+    padding-right:6px;           /* space for scrollbar */
+    overscroll-behavior:contain; /* prevents page scroll chaining */
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:6px;
+}
+
+/* nicer scrollbar (optional, safe) */
+.cm-list::-webkit-scrollbar{
+    width:10px;
+}
+.cm-list::-webkit-scrollbar-track{
+    background:rgba(0,0,0,.06);
+    border-radius:10px;
+}
+.cm-list::-webkit-scrollbar-thumb{
+    background:rgba(0,0,0,.18);
+    border-radius:10px;
+    border:2px solid rgba(255,255,255,.9);
+}
+
+/* make chips breathe a bit */
+.cm-chip{
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:3px 6px;
+    background:#f5f5f5;
+    border:2px solid rgba(0,0,0,.18);
+    flex-wrap:nowrap;
+    min-height:28px;
+}
+.cm-chip-text{
+    flex:1;
+    min-width:0;
+    overflow-wrap:anywhere;
+    line-height:1.1;
+    font-size:13px;
+}
+.cm-chip form{
+    display:flex;
+    align-items:center;
+    margin:0;
+}
+.cm-chip .icon-btn{
+    width:24px;
+    height:24px;
+}
+
+.cm-addrow{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:4px;
+}
+.cm-addrow .input{
+    flex:1;
+    min-width:0;
+    font-size:14px;
+    padding:6px 8px;
+}
+.cm-addrow .btn{
+    width:auto;
+    padding:6px 10px;
+    font-size:14px;
+}
+
+/* File preview */
+.file-preview{
+    border:2px dashed rgba(0,0,0,.25);
+    background:rgba(255,255,255,.45);
+    border-radius:12px;
+    padding:8px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    min-height:44px;
+}
+.file-preview-empty{
+    font-size:12px;
+    opacity:.7;
+}
+.file-preview-image{
+    width:120px;
+    height:90px;
+    object-fit:cover;
+    border-radius:10px;
+    border:2px solid rgba(0,0,0,.25);
+    background:#fff;
+}
+.file-preview-file{
+    padding:6px 10px;
+    border-radius:10px;
+    background:#fff;
+    border:2px solid rgba(0,0,0,.2);
+    font-size:13px;
+    font-weight:700;
+}
+.file-preview-meta{
+    font-size:12px;
+    font-weight:800;
+}
+
+/* Mobile */
+@media (max-width: 980px){
+    .classroom-grid{
+        grid-template-columns: 1fr;
+    }
+    .right-space{
+        min-height:180px;
+        border-left:none;
+        padding-left:0;
+    }
+    .cm-list{
+        max-height:220px;
+    }
+}

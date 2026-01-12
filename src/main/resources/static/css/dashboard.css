@@ -1,0 +1,171 @@
+/* DASHBOARD SPECIFIC STYLES */
+
+.notes-wrap{ margin-top:12px; }
+.notes-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:34px 44px;
+    justify-content:flex-start;
+    align-items:flex-start;
+    padding:8px 6px 22px;
+    box-sizing:border-box;
+}
+
+.note{
+    width:270px;
+    height:210px;
+    box-sizing:border-box;
+    padding:12px 14px;
+    border:1px solid rgba(0,0,0,.22);
+    box-shadow: 10px 10px 0 rgba(0,0,0,.30);
+    overflow:hidden;
+    background:#fff;
+    cursor:pointer;
+    transition: transform 0.1s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+.note:hover {
+    transform: scale(1.02);
+}
+
+.note.yellow{ background:var(--note-yellow); }
+.note.green{ background:var(--note-green); }
+.note.blue{ background:var(--note-blue); }
+.note.purple{ background:var(--note-purple); }
+.note.pink{ background:var(--note-pink); }
+
+.note-title{
+    margin:0 0 8px 0;
+    font-size:30px;
+    font-weight:800;
+    text-align:center;
+    line-height:1;
+}
+.note-body{
+    margin:0;
+    font-size:11px;
+    line-height:1.25;
+    white-space:pre-wrap;
+}
+
+/* Optional teacher actions inside notes */
+.note-actions{
+    margin-top:10px;
+    display:flex;
+    gap:10px;
+    justify-content:center;
+}
+.mini-btn{
+    font-size:14px;
+    padding:3px 8px;
+    border:2px solid rgba(0,0,0,.45);
+    background:#fff;
+    border-radius:6px;
+    cursor:pointer;
+    box-shadow:0 2px 0 rgba(0,0,0,.12);
+}
+/* MODAL (used by dashboard create classroom) */
+.modal-overlay{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background: rgba(0,0,0,.35);
+    z-index:60;
+    padding:24px;
+    box-sizing:border-box;
+}
+
+.modal-overlay[aria-hidden="false"]{
+    display:flex;
+}
+
+.modal{
+    width:min(640px, 100%);
+    border:2px solid rgba(0,0,0,.35);
+    background: var(--creator-bg);
+    box-shadow:0 3px 0 rgba(0,0,0,.18);
+}
+
+.modal-header{
+    height:46px;
+    background:var(--creator-topbar);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 12px;
+    box-sizing:border-box;
+    font-weight:800;
+    font-size:22px;
+}
+
+.modal-title{ font-weight:800; }
+
+.modal-close{
+    width:36px;
+    height:36px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:34px;
+    line-height:1;
+    color:#ff2a2a;
+    cursor:pointer;
+    user-select:none;
+    background:transparent;
+    border:0;
+}
+
+.modal-body{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding:12px;
+    box-sizing:border-box;
+    background:var(--creator-strip);
+}
+
+.field-label{
+    font-size:18px;
+    font-weight:800;
+}
+
+.input{
+    width:100%;
+    font-size:16px;
+    padding:8px;
+    background:var(--creator-input);
+    border:2px solid rgba(0,0,0,.18);
+    outline:none;
+    box-sizing:border-box;
+    font-family:inherit;
+}
+
+.textarea{
+    width:100%;
+    font-size:16px;
+    padding:8px;
+    background:var(--creator-bg);
+    border:2px solid rgba(0,0,0,.18);
+    outline:none;
+    box-sizing:border-box;
+    font-family:inherit;
+    min-height:90px;
+    resize:vertical;
+}
+
+.help{
+    font-size:12px;
+    opacity:.85;
+    margin-top:-6px;
+}
+
+.modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:6px;
+}

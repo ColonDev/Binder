@@ -1,0 +1,19 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="sidebar(activePage)">
+    <aside class="sidebar">
+        <a class="nav-btn" th:classappend="${activePage == 'dashboard'} ? ' is-active' : ''" href="/dashboard">Home</a>
+        <a class="nav-btn" th:classappend="${activePage == 'todo'} ? ' is-active' : ''" href="/todo">To-Do</a>
+        <a class="nav-btn" th:classappend="${activePage == 'flashcards'} ? ' is-active' : ''" href="/flashcards">Flashcard</a>
+        <a class="nav-btn" th:classappend="${activePage == 'progress'} ? ' is-active' : ''" href="/progress">Progress</a>
+        <a class="nav-btn" th:classappend="${activePage == 'messages'} ? ' is-active' : ''" href="/messages">Messages</a>
+
+        <div class="sidebar-spacer"></div>
+
+        <div class="profile-card">
+            <div class="profile-line" th:text="${name}">NAME</div>
+            <div class="profile-line" th:text="${role}">ROLE</div>
+            <div class="profile-actions">
+                <a class="logout" href="/logout">Logout</a>
+            </div>
+        </div>
+    </aside>
+</th:block>

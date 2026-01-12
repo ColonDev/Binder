@@ -1,8 +1,103 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head><title>Dashboard - Binder</title></head>
+<html xmlns:th="http://www.thymeleaf.org" lang="english">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard - Binder</title>
+
+    <link rel="stylesheet" th:href="@{/css/base.css}" />
+    <link rel="stylesheet" th:href="@{/css/dashboard.css(v=${#dates.createNow().time})}" href="/css/dashboard.css">
+</head>
+
 <body>
-    <h1>Welcome, <span th:text="${name}">User</span>!</h1>
-    <a href="/logout">Logout</a>
+<div class="app">
+    <div th:replace="fragments/sidebar :: sidebar('dashboard')"></div>
+
+    <main id="main"
+          class="main"
+          th:classappend="${#strings.toString(role) == 'TEACHER'} ? ' has-ribbon' : ''">
+
+        <div class="ribbon"
+             th:if="${#strings.toString(role) == 'TEACHER'}"
+             onclick="toggleManage()">Manage</div>
+
+        <aside id="manageSide" class="manage-side" aria-hidden="true">
+            <div class="manage-inner">
+                <button class="btn btn-primary" type="button" onclick="openModal('classroomModal')">New Class</button>
+            </div>
+        </aside>
+
+        <!-- PAPER -->
+        <div id="paper" class="paper">
+            <h1 class="page-title">Your Classrooms</h1>
+
+            <div id="classroomsArea">
+                <div th:if="${classrooms == null || #lists.isEmpty(classrooms)}" class="empty-msg">
+                    You are not enrolled in any classes yet.
+                </div>
+
+                <div class="notes-wrap" th:if="${classrooms != null && !#lists.isEmpty(classrooms)}">
+                    <div class="notes-grid">
+                        <a th:each="classroom : ${classrooms}"
+                           th:href="@{/classrooms/{id}(id=${classroom.classId})}"
+                           class="note"
+                           th:classappend="${#strings.arraySplit('yellow,green,blue,purple,pink', ',')[T(java.lang.Math).abs(classroom.classId.hashCode()) % 5]}">
+
+                            <h2 class="note-title"
+                                th:text="${#strings.abbreviate(classroom.name, 24)}"
+                                th:attr="title=${classroom.name}">
+                                Class name
+                            </h2>
+
+                            <p class="note-body" th:text="${classroom.description} ?: ''">Description</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:replace="fragments/dashboard-modals :: classroomModal"></div>
+    </main>
+</div>
+
+<script>
+    function openModal(id){
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.setAttribute('aria-hidden','false');
+    }
+
+    function closeModal(id){
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.setAttribute('aria-hidden','true');
+    }
+
+    function openManage(){
+        const main = document.getElementById('main');
+        const side = document.getElementById('manageSide');
+        main.classList.add('manage-open');
+        side.setAttribute('aria-hidden','false');
+    }
+
+    function closeManage(){
+        const main = document.getElementById('main');
+        const side = document.getElementById('manageSide');
+        main.classList.remove('manage-open');
+        side.setAttribute('aria-hidden','true');
+        closeModal('classroomModal');
+    }
+
+    function toggleManage(){
+        const main = document.getElementById('main');
+        if (main.classList.contains('manage-open')) closeManage();
+        else openManage();
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeManage();
+    });
+</script>
+
 </body>
 </html>

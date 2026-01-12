@@ -1,0 +1,37 @@
+<th:block xmlns:th="http://www.thymeleaf.org">
+    <div id="classroomModal"
+         class="modal-overlay"
+         aria-hidden="true"
+         th:if="${#strings.toString(role) == 'TEACHER'}"
+         th:fragment="classroomModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Create Classroom</div>
+                <button class="modal-close" type="button" onclick="closeModal('classroomModal')">×</button>
+            </div>
+
+            <form class="modal-body" method="post" action="/classrooms/create">
+                <label class="field-label" for="ccName">Classroom name</label>
+                <input id="ccName" class="input" name="name" type="text" maxlength="60" required
+                       placeholder="e.g. Year 10 Maths" />
+                <div class="help">Display limit on dashboard: 24 chars. Full name still saved.</div>
+
+                <label class="field-label" for="ccDesc">Description</label>
+                <textarea id="ccDesc" class="textarea" name="description" maxlength="500" placeholder="Optional..."></textarea>
+
+                <label class="field-label" for="ccStudents">Students (emails)</label>
+                <textarea id="ccStudents" class="textarea" name="studentEmails" maxlength="4000"
+                          placeholder="Enter emails separated by commas or spaces..."></textarea>
+
+                <label class="field-label" for="ccTeachers">Teachers (emails)</label>
+                <textarea id="ccTeachers" class="textarea" name="teacherEmails" maxlength="2000"
+                          placeholder="Enter emails separated by commas or spaces..."></textarea>
+
+                <div class="modal-actions">
+                    <button class="btn" type="button" onclick="closeModal('classroomModal')">Cancel</button>
+                    <button class="btn btn-primary" type="submit">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</th:block>

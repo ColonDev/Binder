@@ -1,5 +1,8 @@
-package com.binder.demo;
+package com.binder.demo.controllers;
 
+import com.binder.demo.classroom.Classroom;
+import com.binder.demo.services.ClassroomService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCrypt;
@@ -10,46 +13,77 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
- * AuthController
- * This class manages user login and registration.
- * It connects to a database to store user information and
- * uses BCrypt to securely store and check passwords.
+ * Handles login, registration, and dashboard access for local accounts.
  */
 @Controller
 public class AuthController {
 
-    // Used to run SQL queries and updates on the database
+    /**
+     * Executes SQL queries and updates.
+     */
     private final JdbcTemplate jdbcTemplate;
 
-    // Email format check
+    /**
+     * Loads classroom data for the dashboard.
+     */
+    private final ClassroomService classroomService;
+
+    /**
+     * Basic email format checker.
+     */
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
-    // Constructor that receives the database helper
-    public AuthController(JdbcTemplate jdbcTemplate) {
+    /**
+     * Creates a controller with the required services.
+     *
+     * @param jdbcTemplate SQL helper
+     * @param classroomService classroom service
+     */
+    public AuthController(JdbcTemplate jdbcTemplate, ClassroomService classroomService) {
         this.jdbcTemplate = jdbcTemplate;
+        this.classroomService = classroomService;
     }
 
+    /**
+     * Redirects the root path to the login page.
+     *
+     * @return redirect to login
+     */
     @GetMapping("/")
     public String index() {
         return "redirect:/login";
     }
 
+    /**
+     * Shows the login page unless the user is already logged in.
+     *
+     * @param session current session
+     * @return login view or redirect to dashboard
+     */
     @GetMapping("/login")
     public String loginPage(HttpSession session) {
-        if (session.getAttribute("user") != null) {
+        if (session.getAttribute("userId") != null) {
             return "redirect:/dashboard";
         }
         return "login";
     }
 
+    /**
+     * Processes a login request for a local account.
+     *
+     * @param email user email
+     * @param password user password
+     * @param session current session
+     * @param model view model for errors
+     * @return redirect to dashboard or login view with error
+     */
     @PostMapping("/login")
     public String processLogin(@RequestParam String email,
                                @RequestParam String password,
@@ -64,10 +98,10 @@ public class AuthController {
             return "login";
         }
 
-        String sql = "SELECT a.password_hash, u.full_name " +
-                     "FROM users u " +
-                     "JOIN authentications a ON u.user_id = a.user_id " +
-                     "WHERE u.email = ? AND a.provider = 'LOCAL'";
+        String sql = "SELECT a.password_hash, u.full_name, u.user_id, u.email, u.role " +
+                "FROM users u " +
+                "JOIN authentications a ON u.user_id = a.user_id " +
+                "WHERE u.email = ? AND a.provider = 'LOCAL'";
 
         List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, email);
 
@@ -75,8 +109,17 @@ public class AuthController {
             String savedHash = (String) results.get(0).get("password_hash");
 
             if (savedHash != null && BCrypt.checkpw(password, savedHash)) {
-                // Store user info in session
-                session.setAttribute("user", results.get(0).get("full_name"));
+
+                // Normalise userId into a real UUID before storing in session
+                Object rawUserId = results.get(0).get("user_id");
+                UUID userId = (rawUserId instanceof UUID)
+                        ? (UUID) rawUserId
+                        : UUID.fromString(rawUserId.toString());
+
+                session.setAttribute("userId", userId);
+                session.setAttribute("userName", results.get(0).get("full_name"));
+                session.setAttribute("userEmail", results.get(0).get("email"));
+                session.setAttribute("userRole", results.get(0).get("role").toString().trim());
                 return "redirect:/dashboard";
             }
         }
@@ -85,33 +128,68 @@ public class AuthController {
         return "login";
     }
 
+    /**
+     * Renders the dashboard for the logged-in user.
+     *
+     * @param session current session
+     * @param model view model for user and classroom data
+     * @return dashboard view or redirect to login
+     */
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
-        Object user = session.getAttribute("user");
-        if (user == null) {
+        UUID userId = (UUID) session.getAttribute("userId");
+        if (userId == null) {
             return "redirect:/login";
         }
-        model.addAttribute("name", user);
+
+        model.addAttribute("name", session.getAttribute("userName"));
+        model.addAttribute("email", session.getAttribute("userEmail"));
+        model.addAttribute("role", session.getAttribute("userRole"));
+
+        // Fetch classrooms using the ClassroomService (
+        List<Classroom> classrooms = classroomService.getClassroomsForUser(userId);
+        model.addAttribute("classrooms", classrooms);
+
         return "dashboard";
     }
 
+    /**
+     * Logs out the user and clears the session.
+     *
+     * @param session current session
+     * @return redirect to login
+     */
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
         return "redirect:/login";
     }
 
+    /**
+     * Shows the registration page.
+     *
+     * @return register view
+     */
     @GetMapping("/register")
     public String registerPage() {
         return "register";
     }
 
     /**
-     * Registration rules:
-     * - Sanity check that a role for a teacher or student is provided.
+     * Registers a new user with basic validation.
+     *
+     * <p>Rules:
+     * - A role must be provided.
      * - Email must look valid.
-     * - Password must meet basic rules.
-     * - Email must not already exist in the database.
+     * - Password must include letters and numbers and be at least 8 characters.
+     * - Email must be unique.
+     *
+     * @param email user email
+     * @param password user password
+     * @param fullName user full name
+     * @param role user role string
+     * @param model view model for errors
+     * @return redirect to login or register view with error
      */
     @Transactional
     @PostMapping("/register")
