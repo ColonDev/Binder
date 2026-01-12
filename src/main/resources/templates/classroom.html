@@ -1,4 +1,3 @@
-<!-- src/main/resources/templates/classroom.html -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -148,21 +147,34 @@
 
                     <div class="post-note-body" th:text="${post.description}">Description</div>
 
-                    <!-- Resource attachments (resources are uploads) -->
-                    <div th:if="${post.attachments != null and !#lists.isEmpty(post.attachments)}"
-                         class="attachment-list">
-                        <strong>Attachments:</strong>
-                        <ul>
-                            <li th:each="att : ${post.attachments}">
-                                <a class="attachment-link"
-                                   th:href="@{/attachments/{id}(id=${att.id})}"
-                                   th:text="${att.filename} ?: 'Download file'">
-                                    Download file
+                    <div class="post-attachments"
+                         th:if="${post.attachments != null and !post.attachments.isEmpty()}">
+                        <div class="post-attachments-title">Attachments</div>
+                        <div class="post-attachments-grid">
+                            <div class="post-attachment"
+                                 th:each="att : ${post.attachments}"
+                                 th:with="filename=${T(com.binder.demo.services.AttachmentService).filenameFromUrl(att.url)},
+                                          lower=${#strings.toLowerCase(filename)}">
+                                <a class="post-attachment-preview"
+                                   th:href="@{/attachments/{id}(id=${att.attachmentId})}">
+                                    <img class="post-attachment-image"
+                                         th:if="${lower.endsWith('.png') or lower.endsWith('.jpg') or lower.endsWith('.jpeg') or lower.endsWith('.gif') or lower.endsWith('.webp')}"
+                                         th:src="@{/attachments/{id}/inline(id=${att.attachmentId})}"
+                                         th:alt="${filename}" />
+                                    <div class="post-attachment-file"
+                                         th:if="${!(lower.endsWith('.png') or lower.endsWith('.jpg') or lower.endsWith('.jpeg') or lower.endsWith('.gif') or lower.endsWith('.webp'))}">
+                                        File
+                                    </div>
                                 </a>
-                                <span class="help" th:if="${att.sizeBytes != null}"
-                                      th:text="' • ' + ${att.sizeBytes} + ' bytes'"></span>
-                            </li>
-                        </ul>
+                                <div class="post-attachment-meta">
+                                    <div class="post-attachment-name" th:text="${filename}">file.ext</div>
+                                    <a class="post-attachment-link"
+                                       th:href="@{/attachments/{id}(id=${att.attachmentId})}">
+                                        Download
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div th:replace="fragments/post-controls :: postActions(post=${post}, classroom=${classroom}, submittedPostIds=${submittedPostIds}, isTeacher=${isTeacher}, isStudent=${isStudent})"></div>

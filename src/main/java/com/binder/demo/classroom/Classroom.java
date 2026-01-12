@@ -6,6 +6,11 @@ import org.hibernate.annotations.UuidGenerator;
 import java.time.Instant;
 import java.util.UUID;
 
+
+/**
+ * A container for a classroom.
+ * Each classroom has a unique ID, name, description, and creation timestamp.
+ */
 @Entity
 @Table(name = "classrooms")
 public class Classroom {
@@ -39,6 +44,4 @@ public class Classroom {
     public void setDescription(String description) { this.description = description; }
 
     public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-
 }

@@ -47,6 +47,9 @@ public class Assignment extends ClassroomPost {
     public UUID getAssignmentId() { return assignmentId; }
     public void setAssignmentId(UUID assignmentId) { this.assignmentId = assignmentId; }
 
+    @Override
+    public UUID getPostId() { return assignmentId; }
+
     public String getTimeToComplete() { return timeToComplete; }
     public void setTimeToComplete(String timeToComplete) { this.timeToComplete = timeToComplete; }
 

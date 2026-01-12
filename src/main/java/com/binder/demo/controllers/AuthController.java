@@ -19,35 +19,54 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
- * AuthController
- * This class manages user login and registration.
- * It connects to a database to store user information and
- * uses BCrypt to securely store and check passwords.
+ * Handles login, registration, and dashboard access for local accounts.
  */
 @Controller
 public class AuthController {
 
-    /** Used to run SQL queries and updates on the database */
+    /**
+     * Executes SQL queries and updates.
+     */
     private final JdbcTemplate jdbcTemplate;
 
-    /** Used to fetch classroom data for the dashboard (keeps classroom SQL out of this controller) */
+    /**
+     * Loads classroom data for the dashboard.
+     */
     private final ClassroomService classroomService;
 
-    /** Email format checker */
+    /**
+     * Basic email format checker.
+     */
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
-    // Constructor that receives the database helper
+    /**
+     * Creates a controller with the required services.
+     *
+     * @param jdbcTemplate SQL helper
+     * @param classroomService classroom service
+     */
     public AuthController(JdbcTemplate jdbcTemplate, ClassroomService classroomService) {
         this.jdbcTemplate = jdbcTemplate;
         this.classroomService = classroomService;
     }
 
+    /**
+     * Redirects the root path to the login page.
+     *
+     * @return redirect to login
+     */
     @GetMapping("/")
     public String index() {
         return "redirect:/login";
     }
 
+    /**
+     * Shows the login page unless the user is already logged in.
+     *
+     * @param session current session
+     * @return login view or redirect to dashboard
+     */
     @GetMapping("/login")
     public String loginPage(HttpSession session) {
         if (session.getAttribute("userId") != null) {
@@ -56,6 +75,15 @@ public class AuthController {
         return "login";
     }
 
+    /**
+     * Processes a login request for a local account.
+     *
+     * @param email user email
+     * @param password user password
+     * @param session current session
+     * @param model view model for errors
+     * @return redirect to dashboard or login view with error
+     */
     @PostMapping("/login")
     public String processLogin(@RequestParam String email,
                                @RequestParam String password,
@@ -100,6 +128,13 @@ public class AuthController {
         return "login";
     }
 
+    /**
+     * Renders the dashboard for the logged-in user.
+     *
+     * @param session current session
+     * @param model view model for user and classroom data
+     * @return dashboard view or redirect to login
+     */
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
         UUID userId = (UUID) session.getAttribute("userId");
@@ -118,23 +153,43 @@ public class AuthController {
         return "dashboard";
     }
 
+    /**
+     * Logs out the user and clears the session.
+     *
+     * @param session current session
+     * @return redirect to login
+     */
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
         return "redirect:/login";
     }
 
+    /**
+     * Shows the registration page.
+     *
+     * @return register view
+     */
     @GetMapping("/register")
     public String registerPage() {
         return "register";
     }
 
     /**
-     * Registration rules:
-     * - Sanity check that a role for a teacher or student is provided.
+     * Registers a new user with basic validation.
+     *
+     * <p>Rules:
+     * - A role must be provided.
      * - Email must look valid.
-     * - Password must meet basic rules.
-     * - Email must not already exist in the database.
+     * - Password must include letters and numbers and be at least 8 characters.
+     * - Email must be unique.
+     *
+     * @param email user email
+     * @param password user password
+     * @param fullName user full name
+     * @param role user role string
+     * @param model view model for errors
+     * @return redirect to login or register view with error
      */
     @Transactional
     @PostMapping("/register")

@@ -37,6 +37,9 @@ public class Resource extends ClassroomPost {
     public UUID getResourceId() { return resourceId; }
     public void setResourceId(UUID resourceId) { this.resourceId = resourceId; }
 
+    @Override
+    public UUID getPostId() { return resourceId; }
+
     public Set<Attachment> getAttachments() { return attachments; }
     public void setAttachments(Set<Attachment> attachments) {
         this.attachments = (attachments == null) ? new HashSet<>() : attachments;

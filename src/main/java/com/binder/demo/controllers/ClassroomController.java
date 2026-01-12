@@ -1,6 +1,7 @@
 package com.binder.demo.controllers;
 
 import com.binder.demo.classroom.Classroom;
+import com.binder.demo.services.ClassroomPostService;
 import com.binder.demo.services.ClassroomService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
@@ -13,18 +14,42 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Controller class to manage application operations related to Classroom entities.
- * This controller handles HTTP requests for all CRUD operations
+ * Handles classroom CRUD and enrollment endpoints.
  */
 @Controller
 public class ClassroomController {
 
+    /**
+     * Classroom service used for persistence and enrollment operations.
+     */
     private final ClassroomService classroomService;
+    /**
+     * Post service used to load posts for classroom views.
+     */
+    private final ClassroomPostService classroomPostService;
 
-    public ClassroomController(ClassroomService classroomService) {
+    /**
+     * Creates a controller with required services.
+     *
+     * @param classroomService classroom service
+     * @param classroomPostService post service
+     */
+    public ClassroomController(ClassroomService classroomService,
+                               ClassroomPostService classroomPostService) {
         this.classroomService = classroomService;
+        this.classroomPostService = classroomPostService;
     }
 
+    /**
+     * Creates a new classroom for a teacher.
+     *
+     * @param name classroom name
+     * @param description classroom description
+     * @param studentEmails optional student emails
+     * @param teacherEmails optional teacher emails
+     * @param session current session
+     * @return redirect to dashboard
+     */
     @PostMapping("/classrooms/create")
     public String handleCreateClassroom(@RequestParam String name,
                                         @RequestParam String description,
@@ -85,7 +110,7 @@ public class ClassroomController {
             model.addAttribute("classroom", classroom.get());
             model.addAttribute("name", session.getAttribute("userName"));
             model.addAttribute("role", session.getAttribute("userRole"));
-            model.addAttribute("posts", List.of());
+            model.addAttribute("posts", classroomPostService.getPostsForClassroom(id));
             model.addAttribute("enrolledStudents", classroomService.getEnrolledStudentEmails(id));
             model.addAttribute("enrolledTeachers", classroomService.getEnrolledTeacherEmails(id));
             return "classroom";
@@ -93,6 +118,15 @@ public class ClassroomController {
         return "redirect:/dashboard";
     }
 
+    /**
+     * Enrolls students in a classroom by email list.
+     *
+     * @param classId classroom id
+     * @param studentEmails list of student emails
+     * @param session current session
+     * @param redirectAttributes flash attributes for errors
+     * @return redirect to classroom
+     */
     @PostMapping("/classrooms/enroll")
     public String handleEnrollStudents(@RequestParam UUID classId,
                                        @RequestParam String studentEmails,
@@ -114,6 +148,15 @@ public class ClassroomController {
         return "redirect:/classrooms/" + classId;
     }
 
+    /**
+     * Enrolls teachers in a classroom by email list.
+     *
+     * @param classId classroom id
+     * @param teacherEmails list of teacher emails
+     * @param session current session
+     * @param redirectAttributes flash attributes for errors
+     * @return redirect to classroom
+     */
     @PostMapping("/classrooms/enroll-teachers")
     public String handleEnrollTeachers(@RequestParam UUID classId,
                                        @RequestParam String teacherEmails,
@@ -135,6 +178,14 @@ public class ClassroomController {
         return "redirect:/classrooms/" + classId;
     }
 
+    /**
+     * Removes a student from the classroom by email.
+     *
+     * @param classId classroom id
+     * @param email student email
+     * @param session current session
+     * @return redirect to classroom
+     */
     @PostMapping("/classrooms/remove-student")
     public String handleRemoveStudent(@RequestParam UUID classId,
                                       @RequestParam String email,

@@ -25,7 +25,6 @@ public class Attachment {
     @Column(name = "user_owner", nullable = false)
     private UUID userOwner;
 
-    // If you want Hibernate to generate UUIDs in Java (instead of relying on DB default):
     @PrePersist
     void prePersist() {
         if (attachmentId == null) attachmentId = UUID.randomUUID();

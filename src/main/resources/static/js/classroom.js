@@ -2,13 +2,94 @@ document.addEventListener('DOMContentLoaded', () => {
     const main = document.getElementById('main');
     const side = document.getElementById('manageSide');
 
+    const formatBytes = (bytes) => {
+        if (!Number.isFinite(bytes)) return '';
+        const units = ['B', 'KB', 'MB', 'GB'];
+        let size = bytes;
+        let unit = 0;
+        while (size >= 1024 && unit < units.length - 1) {
+            size /= 1024;
+            unit += 1;
+        }
+        const precision = unit === 0 ? 0 : size < 10 ? 1 : 0;
+        return `${size.toFixed(precision)} ${units[unit]}`;
+    };
+
+    const clearPreview = (preview) => {
+        if (preview.dataset.objectUrl) {
+            URL.revokeObjectURL(preview.dataset.objectUrl);
+            delete preview.dataset.objectUrl;
+        }
+        preview.innerHTML = '';
+        const empty = document.createElement('div');
+        empty.className = 'file-preview-empty';
+        empty.textContent = 'No file selected.';
+        preview.appendChild(empty);
+    };
+
+    const renderPreview = (preview, file) => {
+        if (preview.dataset.objectUrl) {
+            URL.revokeObjectURL(preview.dataset.objectUrl);
+            delete preview.dataset.objectUrl;
+        }
+        preview.innerHTML = '';
+
+        if (file.type && file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            const url = URL.createObjectURL(file);
+            preview.dataset.objectUrl = url;
+            img.src = url;
+            img.alt = file.name || 'Selected image';
+            img.className = 'file-preview-image';
+            preview.appendChild(img);
+        } else {
+            const fileBadge = document.createElement('div');
+            fileBadge.className = 'file-preview-file';
+            fileBadge.textContent = file.name || 'Selected file';
+            preview.appendChild(fileBadge);
+        }
+
+        const meta = document.createElement('div');
+        meta.className = 'file-preview-meta';
+        const size = formatBytes(file.size);
+        meta.textContent = size ? `${file.name} • ${size}` : file.name;
+        preview.appendChild(meta);
+    };
+
+    const setupFilePreview = (input) => {
+        const targetId = input.dataset.previewTarget;
+        if (!targetId) return;
+        const preview = document.getElementById(targetId);
+        if (!preview) return;
+        const update = () => {
+            const file = input.files && input.files[0];
+            if (!file) {
+                clearPreview(preview);
+                return;
+            }
+            renderPreview(preview, file);
+        };
+        input.addEventListener('change', update);
+        clearPreview(preview);
+    };
+
     const setModalVisibility = (id, isOpen) => {
         const el = document.getElementById(id);
         if (!el) return;
         el.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
     };
 
-    const openModal = (id) => setModalVisibility(id, true);
+    const openModal = (id) => {
+        setModalVisibility(id, true);
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.querySelectorAll('input[type="file"][data-preview-target]').forEach((input) => {
+            input.value = '';
+            const targetId = input.dataset.previewTarget;
+            const preview = targetId ? document.getElementById(targetId) : null;
+            if (preview) clearPreview(preview);
+        });
+    };
     const closeModal = (id) => setModalVisibility(id, false);
 
     const setManageOpen = (isOpen) => {
@@ -147,6 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const replaceCheck = document.getElementById('peReplaceAtts');
         if (file && replaceCheck) replaceCheck.checked = true;
     });
+
+    document.querySelectorAll('input[type="file"][data-preview-target]').forEach(setupFilePreview);
 
     // Filter posts
     const filter = document.getElementById('postFilter');

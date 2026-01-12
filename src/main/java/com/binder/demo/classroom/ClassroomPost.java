@@ -43,4 +43,11 @@ public abstract class ClassroomPost {
 
     public PostType getPostType() { return postType; }
     protected void setPostType(PostType postType) { this.postType = postType; }
+
+    public abstract UUID getPostId();
+
+    @PrePersist
+    void prePersist() {
+        if (createdAt == null) createdAt = Instant.now();
+    }
 }

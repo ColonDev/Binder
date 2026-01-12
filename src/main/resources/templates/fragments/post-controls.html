@@ -1,10 +1,9 @@
-<!-- src/main/resources/templates/fragments/post-controls.html -->
 <th:block xmlns:th="http://www.thymeleaf.org">
     <div class="post-note-controls"
          th:fragment="postHeaderControls(post, classroom, isTeacher)">
         <div class="teacher-mini-actions" th:if="${isTeacher}">
             <button class="icon-btn" type="button"
-                    th:attr="data-post-id=${post.id},
+                    th:attr="data-post-id=${post.postId},
                              data-post-type=${post.postType},
                              data-post-title=${post.title},
                              data-post-desc=${post.description},
@@ -20,7 +19,7 @@
                 <input type="hidden" th:if="${_csrf != null}"
                        th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <input type="hidden" name="classroomId" th:value="${classroom.classId}" />
-                <input type="hidden" name="assignmentId" th:value="${post.id}" />
+                <input type="hidden" name="assignmentId" th:value="${post.postId}" />
                 <button class="icon-btn" type="submit" title="Delete">🗑</button>
             </form>
 
@@ -29,7 +28,7 @@
                 <input type="hidden" th:if="${_csrf != null}"
                        th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <input type="hidden" name="classroomId" th:value="${classroom.classId}" />
-                <input type="hidden" name="resourceId" th:value="${post.id}" />
+                <input type="hidden" name="resourceId" th:value="${post.postId}" />
                 <button class="icon-btn" type="submit" title="Delete">🗑</button>
             </form>
         </div>
@@ -37,14 +36,8 @@
 
     <div class="post-note-actions"
          th:fragment="postActions(post, classroom, submittedPostIds, isTeacher, isStudent)">
-        <a th:if="${isTeacher and post.postType == T(com.binder.demo.classroom.PostType).ASSIGNMENT}"
-           class="btn"
-           th:href="@{/classroom/post/assignment/submissions(classroomId=${classroom.classId},assignmentId=${post.id})}">
-            View submissions
-        </a>
-
         <th:block th:if="${isStudent and post.postType == T(com.binder.demo.classroom.PostType).ASSIGNMENT}"
-                  th:with="isSubmitted=${submittedPostIds != null and #lists.contains(submittedPostIds, post.id)}">
+                  th:with="isSubmitted=${submittedPostIds != null and #lists.contains(submittedPostIds, post.postId)}">
 
             <span th:classappend="${isSubmitted} ? ' status-pill is-submitted' : ' status-pill is-unsubmitted'"
                   class="status-pill">
@@ -52,7 +45,7 @@
             </span>
 
             <button class="btn btn-primary" type="button"
-                    th:attr="data-assignment-id=${post.id}"
+                    th:attr="data-assignment-id=${post.postId}"
                     data-action="open-submit-modal"
                     th:text="${isSubmitted} ? 'Update submission' : 'Submit'">
                 Submit
@@ -63,7 +56,7 @@
                 <input type="hidden" th:if="${_csrf != null}"
                        th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <input type="hidden" name="classroomId" th:value="${classroom.classId}" />
-                <input type="hidden" name="assignmentId" th:value="${post.id}" />
+                <input type="hidden" name="assignmentId" th:value="${post.postId}" />
                 <button class="btn btn-danger" type="submit">Un-submit</button>
             </form>
         </th:block>
