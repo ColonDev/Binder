@@ -11,18 +11,39 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Handles classroom persistence and enrollment operations.
+ */
 @Service
 public class ClassroomService {
 
+    /**
+     * JPA entity manager used for classroom persistence and queries.
+     */
     @PersistenceContext
     private EntityManager em;
 
+    /**
+     * User service used for enrollment checks and updates.
+     */
     private final UserService userService;
 
+    /**
+     * Creates a new classroom service.
+     *
+     * @param userService user service for enrollment operations
+     */
     public ClassroomService(UserService userService) {
         this.userService = userService;
     }
 
+    /**
+     * Creates a classroom and optionally enrolls the creator as a teacher.
+     *
+     * @param classroom classroom to persist
+     * @param creatorTeacherId teacher id to link to the classroom
+     * @return persisted classroom
+     */
     @Transactional
     public Classroom createClass(Classroom classroom, UUID creatorTeacherId) {
         if (classroom == null) throw new IllegalArgumentException("classroom is null");
@@ -38,22 +59,43 @@ public class ClassroomService {
         return classroom;
     }
 
+    /**
+     * Finds a classroom by id.
+     *
+     * @param classId classroom id
+     * @return optional classroom
+     */
     public Optional<Classroom> getClassById(UUID classId) {
         if (classId == null) return Optional.empty();
         return Optional.ofNullable(em.find(Classroom.class, classId));
     }
 
+    /**
+     * Loads all classrooms ordered by creation time.
+     *
+     * @return list of classrooms
+     */
     public List<Classroom> getAllClassrooms() {
         return em.createQuery("select c from Classroom c order by c.createdAt desc", Classroom.class)
                 .getResultList();
     }
 
+    /**
+     * Updates a classroom record.
+     *
+     * @param classroom classroom to update
+     */
     @Transactional
     public void updateClass(Classroom classroom) {
         if (classroom == null) return;
         em.merge(classroom);
     }
 
+    /**
+     * Deletes a classroom by id.
+     *
+     * @param classId classroom id to delete
+     */
     @Transactional
     public void removeClass(UUID classId) {
         if (classId == null) return;
@@ -61,26 +103,66 @@ public class ClassroomService {
         if (c != null) em.remove(c);
     }
 
+    /**
+     * Enrolls students by a comma or space separated list of emails.
+     *
+     * @param classId classroom id
+     * @param emails list of student emails
+     */
     public void enrollStudentsByEmails(UUID classId, String emails) {
         userService.enrollStudentsByEmails(classId, emails);
     }
 
+    /**
+     * Enrolls teachers by a comma or space separated list of emails.
+     *
+     * @param classId classroom id
+     * @param emails list of teacher emails
+     */
     public void enrollTeachersByEmails(UUID classId, String emails) {
         userService.enrollTeachersByEmails(classId, emails);
     }
 
+    /**
+     * Enrolls students and returns any emails that do not match the role.
+     *
+     * @param classId classroom id
+     * @param emails list of emails
+     * @return list of emails that are not students
+     */
     public List<String> enrollStudentsByEmailsWithValidation(UUID classId, String emails) {
         return userService.enrollUsersByEmailsWithRoleValidation(classId, emails, Role.STUDENT);
     }
 
+    /**
+     * Enrolls teachers and returns any emails that do not match the role.
+     *
+     * @param classId classroom id
+     * @param emails list of emails
+     * @return list of emails that are not teachers
+     */
     public List<String> enrollTeachersByEmailsWithValidation(UUID classId, String emails) {
         return userService.enrollUsersByEmailsWithRoleValidation(classId, emails, Role.TEACHER);
     }
 
+    /**
+     * Checks whether a user is enrolled in a classroom for a role.
+     *
+     * @param classId classroom id
+     * @param userId user id
+     * @param role expected role
+     * @return true when the user is enrolled for the role
+     */
     public boolean isUserInClass(UUID classId, UUID userId, Role role) {
         return userService.isUserInClass(classId, userId, role);
     }
 
+    /**
+     * Returns classrooms where the user is a student or teacher.
+     *
+     * @param userId user id
+     * @return list of classrooms
+     */
     public List getClassroomsForUser(UUID userId) {
         if (userId == null) return List.of();
 
@@ -96,6 +178,12 @@ public class ClassroomService {
                 .getResultList();
     }
 
+    /**
+     * Loads enrolled student emails for a classroom.
+     *
+     * @param classId classroom id
+     * @return list of student emails
+     */
     public List<String> getEnrolledStudentEmails(UUID classId) {
         if (classId == null) return List.of();
 
@@ -109,6 +197,12 @@ public class ClassroomService {
                 .getResultList();
     }
 
+    /**
+     * Loads enrolled teacher emails for a classroom.
+     *
+     * @param classId classroom id
+     * @return list of teacher emails
+     */
     public List<String> getEnrolledTeacherEmails(UUID classId) {
         if (classId == null) return List.of();
 
@@ -122,6 +216,12 @@ public class ClassroomService {
                 .getResultList();
     }
 
+    /**
+     * Removes a student from a classroom by email.
+     *
+     * @param classId classroom id
+     * @param email student email
+     */
     @Transactional
     public void removeStudentFromClassByEmail(UUID classId, String email) {
         userService.removeStudentFromClassByEmail(classId, email);

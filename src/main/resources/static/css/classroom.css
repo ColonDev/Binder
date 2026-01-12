@@ -15,6 +15,10 @@
     flex-direction:column;
     gap:18px;
 }
+.stream-toolbar .select{
+    width:auto;
+    min-width:160px;
+}
 
 /* Right side is the lined "empty" area */
 .right-space{
@@ -25,7 +29,8 @@
 }
 
 /* Post card styling */
-.post{
+.post,
+.post-note{
     border:2px solid rgba(0,0,0,.35);
     background: rgba(242,229,90,.55); /* default yellow-ish */
     box-shadow: 0 3px 0 rgba(0,0,0,.18);
@@ -33,11 +38,13 @@
     overflow:hidden;
 }
 
-.post.is-resource{
+.post.is-resource,
+.post-note.is-resource{
     background: rgba(112,214,255,.35); /* blue-ish for resources */
 }
 
-.post-header{
+.post-header,
+.post-note-header{
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
@@ -47,14 +54,16 @@
     box-sizing:border-box;
 }
 
-.post-title{
+.post-title,
+.post-note-title{
     font-size:20px;
     font-weight:800;
     margin:0;
     line-height:1.1;
 }
 
-.post-meta{
+.post-meta,
+.post-note-meta{
     font-size:14px;
     font-weight:700;
     opacity:.85;
@@ -62,7 +71,9 @@
 }
 
 /* Controls */
-.post-controls{
+.post-controls,
+.post-note-controls,
+.teacher-mini-actions{
     display:flex;
     align-items:center;
     gap:10px;
@@ -148,6 +159,85 @@ button:disabled,
     display:block;
 }
 
+.post-note-body{
+    padding:12px 14px;
+    box-sizing:border-box;
+    font-size:14px;
+    line-height:1.5;
+    white-space:pre-wrap;
+}
+
+.post-attachments{
+    margin:0 14px 12px;
+    padding:10px;
+    border:2px solid rgba(0,0,0,.2);
+    border-radius:12px;
+    background:rgba(255,255,255,.6);
+}
+.post-attachments-title{
+    font-size:13px;
+    font-weight:800;
+    margin-bottom:8px;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+}
+.post-attachments-grid{
+    display:grid;
+    gap:10px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+.post-attachment{
+    background:#fff;
+    border:2px solid rgba(0,0,0,.2);
+    border-radius:12px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+}
+.post-attachment-preview{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#f3f3f3;
+    border-bottom:2px solid rgba(0,0,0,.12);
+    min-height:110px;
+    text-decoration:none;
+    color:inherit;
+}
+.post-attachment-image{
+    width:100%;
+    height:140px;
+    object-fit:cover;
+    display:block;
+}
+.post-attachment-file{
+    font-weight:800;
+    font-size:13px;
+    padding:10px;
+}
+.post-attachment-meta{
+    padding:8px 10px 10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+.post-attachment-name{
+    font-size:12px;
+    font-weight:700;
+    overflow-wrap:anywhere;
+}
+.post-attachment-link{
+    font-size:12px;
+    font-weight:800;
+    text-decoration:none;
+    color:#111;
+    background:#fff;
+    border:2px solid rgba(0,0,0,.2);
+    border-radius:999px;
+    padding:4px 10px;
+    width:max-content;
+}
+
 .post-text{
     margin:0 0 10px 0;
     font-size:14px;
@@ -155,32 +245,37 @@ button:disabled,
     white-space:pre-wrap;
 }
 
-/* Attachments */
-.attachments{
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px;
-    margin-top:10px;
-}
-
-.attachment-tile{
-    width:160px;
-    border:2px solid rgba(0,0,0,.18);
-    background:#fff;
-    box-shadow:0 2px 0 rgba(0,0,0,.12);
-    padding:10px;
-    box-sizing:border-box;
-    font-size:12px;
-    border-radius:12px;
-}
-
 /* Actions row */
-.post-actions{
+.post-actions,
+.post-note-actions{
     margin-top:12px;
     display:flex;
     gap:10px;
     flex-wrap:wrap;
     justify-content:flex-end;
+}
+.post-note-actions{
+    padding:0 14px 12px;
+    margin-top:0;
+}
+
+.status-pill{
+    display:inline-flex;
+    align-items:center;
+    padding:6px 10px;
+    border-radius:999px;
+    border:2px solid rgba(0,0,0,.35);
+    font-size:12px;
+    font-weight:800;
+    background:#fff;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+}
+.status-pill.is-submitted{
+    background:#45f06a;
+}
+.status-pill.is-unsubmitted{
+    background:#ff99c8;
 }
 
 /* Small “flags” on the right edge */
@@ -282,6 +377,43 @@ button:disabled,
     width:auto;
     padding:6px 10px;
     font-size:14px;
+}
+
+/* File preview */
+.file-preview{
+    border:2px dashed rgba(0,0,0,.25);
+    background:rgba(255,255,255,.45);
+    border-radius:12px;
+    padding:8px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    min-height:44px;
+}
+.file-preview-empty{
+    font-size:12px;
+    opacity:.7;
+}
+.file-preview-image{
+    width:120px;
+    height:90px;
+    object-fit:cover;
+    border-radius:10px;
+    border:2px solid rgba(0,0,0,.25);
+    background:#fff;
+}
+.file-preview-file{
+    padding:6px 10px;
+    border-radius:10px;
+    background:#fff;
+    border:2px solid rgba(0,0,0,.2);
+    font-size:13px;
+    font-weight:700;
+}
+.file-preview-meta{
+    font-size:12px;
+    font-weight:800;
 }
 
 /* Mobile */
