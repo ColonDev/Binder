@@ -15,7 +15,7 @@
 
 <body>
 <div class="app">
-    <div th:replace="fragments/sidebar :: sidebar('classroom')"></div>
+    <div th:replace="~{fragments/sidebar :: sidebar('classroom')}"></div>
 
     <main id="main"
           class="main"
@@ -142,7 +142,7 @@
                             </div>
                         </div>
 
-                        <div th:replace="fragments/post-controls :: postHeaderControls(post=${post}, classroom=${classroom}, isTeacher=${isTeacher})"></div>
+                        <div th:replace="~{fragments/post-controls :: postHeaderControls(post=${post}, classroom=${classroom}, isTeacher=${isTeacher})}"></div>
                     </div>
 
                     <div class="post-note-body" th:text="${post.description}">Description</div>
@@ -154,15 +154,18 @@
                             <div class="post-attachment"
                                  th:each="att : ${post.attachments}"
                                  th:with="filename=${T(com.binder.demo.services.AttachmentService).filenameFromUrl(att.url)},
-                                          lower=${#strings.toLowerCase(filename)}">
+                                          lower=${#strings.toLowerCase(filename)},
+                                          isImage=${lower.endsWith('.png') or lower.endsWith('.jpg') or lower.endsWith('.jpeg') or lower.endsWith('.gif') or lower.endsWith('.webp')},
+                                          isPdf=${lower.endsWith('.pdf')}">
                                 <a class="post-attachment-preview"
-                                   th:href="@{/attachments/{id}(id=${att.attachmentId})}">
+                                   th:href="${isImage or isPdf} ? @{/attachments/{id}/inline(id=${att.attachmentId})} : @{/attachments/{id}(id=${att.attachmentId})}"
+                                   th:target="${isImage or isPdf ? '_blank' : null}">
                                     <img class="post-attachment-image"
-                                         th:if="${lower.endsWith('.png') or lower.endsWith('.jpg') or lower.endsWith('.jpeg') or lower.endsWith('.gif') or lower.endsWith('.webp')}"
+                                         th:if="${isImage}"
                                          th:src="@{/attachments/{id}/inline(id=${att.attachmentId})}"
                                          th:alt="${filename}" />
                                     <div class="post-attachment-file"
-                                         th:if="${!(lower.endsWith('.png') or lower.endsWith('.jpg') or lower.endsWith('.jpeg') or lower.endsWith('.gif') or lower.endsWith('.webp'))}">
+                                         th:if="${!isImage}">
                                         File
                                     </div>
                                 </a>
@@ -177,14 +180,14 @@
                         </div>
                     </div>
 
-                    <div th:replace="fragments/post-controls :: postActions(post=${post}, classroom=${classroom}, submittedPostIds=${submittedPostIds}, isTeacher=${isTeacher}, isStudent=${isStudent})"></div>
+                    <div th:replace="~{fragments/post-controls :: postActions(post=${post}, classroom=${classroom}, submittedPostIds=${submittedPostIds}, isTeacher=${isTeacher}, isStudent=${isStudent})}"></div>
                 </article>
             </section>
         </div>
-        <div th:replace="fragments/classroom-modals :: postCreateModal"></div>
-        <div th:replace="fragments/classroom-modals :: postEditModal"></div>
-        <div th:replace="fragments/classroom-modals :: submitModal"></div>
-        <div th:replace="fragments/classroom-modals :: classroomEditModal"></div>
+        <div th:replace="~{fragments/classroom-modals :: postCreateModal}"></div>
+        <div th:replace="~{fragments/classroom-modals :: postEditModal}"></div>
+        <div th:replace="~{fragments/classroom-modals :: submitModal}"></div>
+        <div th:replace="~{fragments/classroom-modals :: classroomEditModal}"></div>
     </main>
 </div>
 

@@ -11,7 +11,7 @@
 
 <body>
 <div class="app">
-    <div th:replace="fragments/sidebar :: sidebar('dashboard')"></div>
+    <div th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></div>
 
     <main id="main"
           class="main"
@@ -56,7 +56,7 @@
             </div>
         </div>
 
-        <div th:replace="fragments/dashboard-modals :: classroomModal"></div>
+        <div th:replace="~{fragments/dashboard-modals :: classroomModal}"></div>
     </main>
 </div>
 

@@ -30,7 +30,7 @@
                 <textarea class="textarea" name="description" maxlength="4000" placeholder="Description"></textarea>
 
                 <label class="field-label">Attachment (optional)</label>
-                <input class="input js-file-input" type="file" name="file" data-preview-target="pcAssignmentPreview" />
+                <input class="input js-file-input" type="file" name="file" multiple data-preview-target="pcAssignmentPreview" />
                 <div id="pcAssignmentPreview" class="file-preview" aria-live="polite"></div>
 
                 <div class="row">
@@ -71,7 +71,7 @@
                 <input class="input" name="title" maxlength="80" placeholder="Title" required />
 
                 <label class="field-label">Upload file</label>
-                <input class="input js-file-input" type="file" name="file" data-preview-target="pcResourcePreview" required />
+                <input class="input js-file-input" type="file" name="file" multiple data-preview-target="pcResourcePreview" required />
                 <div id="pcResourcePreview" class="file-preview" aria-live="polite"></div>
                 <div class="help">Resources are uploaded files (not links).</div>
 
@@ -127,14 +127,14 @@
                     <input id="peMax" class="input" name="maxMarks" type="number" min="0" placeholder="0" />
 
                     <label class="field-label">Add attachment (optional)</label>
-                    <input id="peAssignmentFile" class="input js-file-input" type="file" name="file" data-preview-target="peAssignmentPreview" />
+                    <input id="peAssignmentFile" class="input js-file-input" type="file" name="file" multiple data-preview-target="peAssignmentPreview" />
                     <div id="peAssignmentPreview" class="file-preview" aria-live="polite"></div>
                 </div>
 
                 <!-- Resource-only fields -->
                 <div id="peResourceFields" style="display:none;">
                     <label class="field-label">Replace uploaded file (optional)</label>
-                    <input id="peResourceFile" class="input js-file-input" type="file" name="file" data-preview-target="peResourcePreview" />
+                    <input id="peResourceFile" class="input js-file-input" type="file" name="file" multiple data-preview-target="peResourcePreview" />
                     <div id="peResourcePreview" class="file-preview" aria-live="polite"></div>
                     <label class="field-label" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
                         <input id="peReplaceAtts" type="checkbox" name="replaceAttachments" value="true" />

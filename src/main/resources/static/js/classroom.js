@@ -16,10 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const clearPreview = (preview) => {
-        if (preview.dataset.objectUrl) {
-            URL.revokeObjectURL(preview.dataset.objectUrl);
-            delete preview.dataset.objectUrl;
-        }
+        preview.querySelectorAll('[data-object-url]').forEach((item) => {
+            URL.revokeObjectURL(item.dataset.objectUrl);
+            delete item.dataset.objectUrl;
+        });
         preview.innerHTML = '';
         const empty = document.createElement('div');
         empty.className = 'file-preview-empty';
@@ -27,33 +27,40 @@ document.addEventListener('DOMContentLoaded', () => {
         preview.appendChild(empty);
     };
 
-    const renderPreview = (preview, file) => {
+    const renderPreview = (preview, files) => {
         if (preview.dataset.objectUrl) {
             URL.revokeObjectURL(preview.dataset.objectUrl);
             delete preview.dataset.objectUrl;
         }
         preview.innerHTML = '';
 
-        if (file.type && file.type.startsWith('image/')) {
-            const img = document.createElement('img');
-            const url = URL.createObjectURL(file);
-            preview.dataset.objectUrl = url;
-            img.src = url;
-            img.alt = file.name || 'Selected image';
-            img.className = 'file-preview-image';
-            preview.appendChild(img);
-        } else {
-            const fileBadge = document.createElement('div');
-            fileBadge.className = 'file-preview-file';
-            fileBadge.textContent = file.name || 'Selected file';
-            preview.appendChild(fileBadge);
-        }
+        files.forEach((file) => {
+            const item = document.createElement('div');
+            item.className = 'file-preview-item';
 
-        const meta = document.createElement('div');
-        meta.className = 'file-preview-meta';
-        const size = formatBytes(file.size);
-        meta.textContent = size ? `${file.name} • ${size}` : file.name;
-        preview.appendChild(meta);
+            if (file.type && file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                const url = URL.createObjectURL(file);
+                img.src = url;
+                img.alt = file.name || 'Selected image';
+                img.className = 'file-preview-image';
+                item.appendChild(img);
+                item.dataset.objectUrl = url;
+            } else {
+                const fileBadge = document.createElement('div');
+                fileBadge.className = 'file-preview-file';
+                fileBadge.textContent = file.name || 'Selected file';
+                item.appendChild(fileBadge);
+            }
+
+            const meta = document.createElement('div');
+            meta.className = 'file-preview-meta';
+            const size = formatBytes(file.size);
+            meta.textContent = size ? `${file.name} • ${size}` : file.name;
+            item.appendChild(meta);
+
+            preview.appendChild(item);
+        });
     };
 
     const setupFilePreview = (input) => {
@@ -62,12 +69,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const preview = document.getElementById(targetId);
         if (!preview) return;
         const update = () => {
-            const file = input.files && input.files[0];
-            if (!file) {
+            const files = input.files ? Array.from(input.files) : [];
+            if (!files.length) {
                 clearPreview(preview);
                 return;
             }
-            renderPreview(preview, file);
+            renderPreview(preview, files);
         };
         input.addEventListener('change', update);
         clearPreview(preview);
@@ -195,6 +202,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             openModal('postEditModal');
+        }
+
+        if (action === 'preview-attachment') {
+            return;
         }
     });
 
