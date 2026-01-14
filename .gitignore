@@ -5,6 +5,6 @@
 /uploads/
 
 # IDE files
-.idea/MarsCodeWorkspaceAppSettings.xml
+.idea
 .env
 
