@@ -23,14 +23,14 @@
                        th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <input type="hidden" name="classroomId" th:value="${classroom.classId}" />
 
-                <label class="field-label">Title</label>
-                <input class="input" name="title" maxlength="80" placeholder="Title" required />
+                <label class="field-label" for="pcAssignmentTitle">Title</label>
+                <input id="pcAssignmentTitle" class="input" name="title" maxlength="80" placeholder="Title" required />
 
-                <label class="field-label">Description</label>
-                <textarea class="textarea" name="description" maxlength="4000" placeholder="Description"></textarea>
+                <label class="field-label" for="pcAssignmentDesc">Description</label>
+                <textarea id="pcAssignmentDesc" class="textarea" name="description" maxlength="4000" placeholder="Description"></textarea>
 
-                <label class="field-label">Attachment (optional)</label>
-                <input class="input js-file-input" type="file" name="file" multiple data-preview-target="pcAssignmentPreview" />
+                <label class="field-label" for="pcAssignmentFile">Attachment (optional)</label>
+                <input id="pcAssignmentFile" class="input js-file-input" type="file" name="file" multiple data-preview-target="pcAssignmentPreview" />
                 <div id="pcAssignmentPreview" class="file-preview" aria-live="polite"></div>
 
                 <div class="row">
@@ -41,13 +41,13 @@
                         <div class="help">Leave blank for no due date.</div>
                     </div>
                     <div class="col">
-                        <label class="field-label">Time to complete</label>
-                        <input class="input" name="timeToComplete" maxlength="32" placeholder="e.g. 2h" />
+                        <label class="field-label" for="pcTimeToComplete">Time to complete</label>
+                        <input id="pcTimeToComplete" class="input" name="timeToComplete" maxlength="32" placeholder="e.g. 2h" />
                     </div>
                 </div>
 
-                <label class="field-label">Maximum marks</label>
-                <input class="input" name="maxMarks" type="number" min="0" placeholder="0" />
+                <label class="field-label" for="pcMaxMarks">Maximum marks</label>
+                <input id="pcMaxMarks" class="input" name="maxMarks" type="number" min="0" placeholder="0" />
 
                 <div class="modal-actions">
                     <button class="btn" type="button" data-action="close-modal" data-modal-id="postCreateModal">Cancel</button>
@@ -67,16 +67,16 @@
                        th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <input type="hidden" name="classroomId" th:value="${classroom.classId}" />
 
-                <label class="field-label">Title</label>
-                <input class="input" name="title" maxlength="80" placeholder="Title" required />
+                <label class="field-label" for="pcResourceTitle">Title</label>
+                <input id="pcResourceTitle" class="input" name="title" maxlength="80" placeholder="Title" required />
 
-                <label class="field-label">Upload file</label>
-                <input class="input js-file-input" type="file" name="file" multiple data-preview-target="pcResourcePreview" required />
+                <label class="field-label" for="pcResourceFile">Upload file</label>
+                <input id="pcResourceFile" class="input js-file-input" type="file" name="file" multiple data-preview-target="pcResourcePreview" required />
                 <div id="pcResourcePreview" class="file-preview" aria-live="polite"></div>
                 <div class="help">Resources are uploaded files (not links).</div>
 
-                <label class="field-label">Description</label>
-                <textarea class="textarea" name="description" maxlength="4000" placeholder="Description"></textarea>
+                <label class="field-label" for="pcResourceDesc">Description</label>
+                <textarea id="pcResourceDesc" class="textarea" name="description" maxlength="4000" placeholder="Description"></textarea>
 
                 <div class="modal-actions">
                     <button class="btn" type="button" data-action="close-modal" data-modal-id="postCreateModal">Cancel</button>
@@ -102,11 +102,17 @@
                 <input type="hidden" name="classroomId" th:value="${classroom.classId}" />
                 <input type="hidden" id="pePostId" name="postId" value="" />
 
-                <label class="field-label">Title</label>
+                <label class="field-label" for="peTitle">Title</label>
                 <input id="peTitle" class="input" name="title" maxlength="80" required />
 
-                <label class="field-label">Description</label>
+                <label class="field-label" for="peDesc">Description</label>
                 <textarea id="peDesc" class="textarea" name="description" maxlength="4000"></textarea>
+
+                <div id="peExistingAttachmentsSection" style="display:none;">
+                    <div class="field-label">Existing attachments</div>
+                    <div id="peExistingAttachments" class="file-preview file-preview-existing" aria-live="polite"></div>
+                    <div class="help">Click × to remove an attachment from this post.</div>
+                </div>
 
                 <!-- Assignment-only fields -->
                 <div id="peAssignmentFields">
@@ -118,25 +124,25 @@
                             <div class="help">Leave blank for no due date.</div>
                         </div>
                         <div class="col">
-                            <label class="field-label">Time to complete</label>
-                            <input id="peTtc" class="input" name="timeToComplete" maxlength="32" placeholder="e.g. 2h" />
-                        </div>
+                        <label class="field-label" for="peTtc">Time to complete</label>
+                        <input id="peTtc" class="input" name="timeToComplete" maxlength="32" placeholder="e.g. 2h" />
                     </div>
+                </div>
 
-                    <label class="field-label">Maximum marks</label>
+                    <label class="field-label" for="peMax">Maximum marks</label>
                     <input id="peMax" class="input" name="maxMarks" type="number" min="0" placeholder="0" />
 
-                    <label class="field-label">Add attachment (optional)</label>
+                    <label class="field-label" for="peAssignmentFile">Add attachment (optional)</label>
                     <input id="peAssignmentFile" class="input js-file-input" type="file" name="file" multiple data-preview-target="peAssignmentPreview" />
                     <div id="peAssignmentPreview" class="file-preview" aria-live="polite"></div>
                 </div>
 
                 <!-- Resource-only fields -->
                 <div id="peResourceFields" style="display:none;">
-                    <label class="field-label">Replace uploaded file (optional)</label>
+                    <label class="field-label" for="peResourceFile">Replace uploaded file (optional)</label>
                     <input id="peResourceFile" class="input js-file-input" type="file" name="file" multiple data-preview-target="peResourcePreview" />
                     <div id="peResourcePreview" class="file-preview" aria-live="polite"></div>
-                    <label class="field-label" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+                    <label class="field-label" for="peReplaceAtts" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
                         <input id="peReplaceAtts" type="checkbox" name="replaceAttachments" value="true" />
                         Replace existing attachment(s)
                     </label>
@@ -171,13 +177,13 @@
                 <input type="hidden" name="classroomId" th:value="${classroom.classId}" />
                 <input type="hidden" id="smAssignmentId" name="assignmentId" value="" />
 
-                <label class="field-label">Upload work</label>
+                <label class="field-label" for="smFile">Upload work</label>
                 <input id="smFile" class="input js-file-input" type="file" name="file" data-preview-target="smPreview" />
                 <div id="smPreview" class="file-preview" aria-live="polite"></div>
                 <div class="help">Optional: submit without a file if you only want to mark complete.</div>
 
-                <label class="field-label" style="display:flex;align-items:center;gap:10px;">
-                    <input type="checkbox" name="markComplete" value="true" />
+                <label class="field-label" for="smMarkComplete" style="display:flex;align-items:center;gap:10px;">
+                    <input id="smMarkComplete" type="checkbox" name="markComplete" value="true" />
                     Mark as complete
                 </label>
 
@@ -205,11 +211,11 @@
                            th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <input type="hidden" name="classId" th:value="${classroom.classId}" />
 
-                    <label class="field-label">Name</label>
-                    <input class="input" name="name" maxlength="60" th:value="${classroom.name}" required />
+                    <label class="field-label" for="ceName">Name</label>
+                    <input id="ceName" class="input" name="name" maxlength="60" th:value="${classroom.name}" required />
 
-                    <label class="field-label">Description</label>
-                    <textarea class="textarea" name="description" maxlength="500" th:text="${classroom.description}"></textarea>
+                    <label class="field-label" for="ceDesc">Description</label>
+                    <textarea id="ceDesc" class="textarea" name="description" maxlength="500" th:text="${classroom.description}"></textarea>
 
                     <div class="modal-actions" style="justify-content:flex-end;">
                         <button class="btn btn-primary" type="submit">Save</button>

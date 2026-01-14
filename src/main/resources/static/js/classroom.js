@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const main = document.getElementById('main');
     const side = document.getElementById('manageSide');
+    const fileState = new Map();
 
     const formatBytes = (bytes) => {
         if (!Number.isFinite(bytes)) return '';
@@ -28,13 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderPreview = (preview, files) => {
-        if (preview.dataset.objectUrl) {
-            URL.revokeObjectURL(preview.dataset.objectUrl);
-            delete preview.dataset.objectUrl;
-        }
+        preview.querySelectorAll('[data-object-url]').forEach((item) => {
+            URL.revokeObjectURL(item.dataset.objectUrl);
+            delete item.dataset.objectUrl;
+        });
         preview.innerHTML = '';
 
-        files.forEach((file) => {
+        files.forEach((file, index) => {
             const item = document.createElement('div');
             item.className = 'file-preview-item';
 
@@ -59,6 +60,15 @@ document.addEventListener('DOMContentLoaded', () => {
             meta.textContent = size ? `${file.name} • ${size}` : file.name;
             item.appendChild(meta);
 
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'file-preview-remove';
+            removeBtn.dataset.action = 'remove-file-preview';
+            removeBtn.dataset.index = String(index);
+            removeBtn.setAttribute('aria-label', 'Remove file');
+            removeBtn.textContent = '×';
+            item.appendChild(removeBtn);
+
             preview.appendChild(item);
         });
     };
@@ -68,14 +78,36 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!targetId) return;
         const preview = document.getElementById(targetId);
         if (!preview) return;
+        const syncFiles = (files) => {
+            const dt = new DataTransfer();
+            files.forEach((file) => dt.items.add(file));
+            input.files = dt.files;
+        };
         const update = () => {
             const files = input.files ? Array.from(input.files) : [];
+            fileState.set(input, files);
             if (!files.length) {
                 clearPreview(preview);
                 return;
             }
             renderPreview(preview, files);
         };
+        preview.addEventListener('click', (event) => {
+            const removeBtn = event.target.closest('[data-action="remove-file-preview"]');
+            if (!removeBtn) return;
+            const index = Number(removeBtn.dataset.index);
+            const files = fileState.get(input) || [];
+            if (!Number.isInteger(index) || index < 0 || index >= files.length) return;
+            const next = files.slice();
+            next.splice(index, 1);
+            fileState.set(input, next);
+            syncFiles(next);
+            if (!next.length) {
+                clearPreview(preview);
+            } else {
+                renderPreview(preview, next);
+            }
+        });
         input.addEventListener('change', update);
         clearPreview(preview);
     };
@@ -92,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!el) return;
         el.querySelectorAll('input[type="file"][data-preview-target]').forEach((input) => {
             input.value = '';
+            fileState.delete(input);
             const targetId = input.dataset.previewTarget;
             const preview = targetId ? document.getElementById(targetId) : null;
             if (preview) clearPreview(preview);
@@ -201,12 +234,86 @@ document.addEventListener('DOMContentLoaded', () => {
                 form.action = isResource ? '/classroom/post/resource/edit' : '/classroom/post/assignment/edit';
             }
 
+            const existingSection = document.getElementById('peExistingAttachmentsSection');
+            const existingPreview = document.getElementById('peExistingAttachments');
+            if (existingSection && existingPreview) {
+                existingPreview.innerHTML = '';
+                existingSection.style.display = 'none';
+                form?.querySelectorAll('input[name="removeAttachmentIds"]').forEach((input) => input.remove());
+
+                const postEl = actionEl.closest('.post-note');
+                const attachmentEls = postEl ? Array.from(postEl.querySelectorAll('[data-attachment-id]')) : [];
+                const attachments = attachmentEls.map((el) => ({
+                    id: el.dataset.attachmentId,
+                    name: el.dataset.attachmentName,
+                    isImage: el.dataset.attachmentImage === 'true',
+                    inlineUrl: el.dataset.attachmentInline,
+                    downloadUrl: el.dataset.attachmentDownload
+                })).filter((att) => att.id);
+
+                if (attachments.length) {
+                    existingSection.style.display = 'block';
+                    attachments.forEach((att) => {
+                        const item = document.createElement('div');
+                        item.className = 'file-preview-item';
+                        item.dataset.attachmentId = att.id;
+
+                        if (att.isImage && att.inlineUrl) {
+                            const img = document.createElement('img');
+                            img.src = att.inlineUrl;
+                            img.alt = att.name || 'Existing image';
+                            img.className = 'file-preview-image';
+                            item.appendChild(img);
+                        } else {
+                            const fileBadge = document.createElement('div');
+                            fileBadge.className = 'file-preview-file';
+                            fileBadge.textContent = 'File';
+                            item.appendChild(fileBadge);
+                        }
+
+                        const meta = document.createElement('div');
+                        meta.className = 'file-preview-meta';
+                        meta.textContent = att.name || 'Attachment';
+                        item.appendChild(meta);
+
+                        const removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.className = 'file-preview-remove';
+                        removeBtn.dataset.action = 'remove-existing-attachment';
+                        removeBtn.dataset.attachmentId = att.id;
+                        removeBtn.setAttribute('aria-label', 'Remove attachment');
+                        removeBtn.textContent = '×';
+                        item.appendChild(removeBtn);
+
+                        existingPreview.appendChild(item);
+                    });
+                }
+            }
+
             openModal('postEditModal');
         }
 
-        if (action === 'preview-attachment') {
-            return;
+        if (action === 'remove-existing-attachment') {
+            const attachmentId = actionEl.dataset.attachmentId;
+            const form = document.getElementById('postEditForm');
+            if (!attachmentId || !form) return;
+            const existing = form.querySelector(`input[name="removeAttachmentIds"][value="${attachmentId}"]`);
+            if (!existing) {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'removeAttachmentIds';
+                hidden.value = attachmentId;
+                form.appendChild(hidden);
+            }
+            const item = actionEl.closest('.file-preview-item');
+            const list = document.getElementById('peExistingAttachments');
+            if (item) item.remove();
+            if (list && list.children.length === 0) {
+                const section = document.getElementById('peExistingAttachmentsSection');
+                if (section) section.style.display = 'none';
+            }
         }
+
     });
 
     // Create post type switch

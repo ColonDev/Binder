@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -69,7 +69,8 @@
                                 <input type="hidden" th:if="${_csrf != null}"
                                        th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                                 <input type="hidden" name="classId" th:value="${classroom.classId}" />
-                                <input class="input" name="studentEmails" type="email" placeholder="Input email" maxlength="254" required />
+                                <input class="input" name="studentEmails" type="email" placeholder="Input email" maxlength="254" required
+                                       aria-label="Student emails" />
                                 <button class="btn btn-primary" type="submit">Add</button>
                             </form>
                         </div>
@@ -90,7 +91,8 @@
                                 <input type="hidden" th:if="${_csrf != null}"
                                        th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                                 <input type="hidden" name="classId" th:value="${classroom.classId}" />
-                                <input class="input" name="teacherEmails" type="email" placeholder="Input email" maxlength="254" required />
+                                <input class="input" name="teacherEmails" type="email" placeholder="Input email" maxlength="254" required
+                                       aria-label="Teacher emails" />
                                 <button class="btn btn-primary" type="submit">Add</button>
                             </form>
                         </div>
@@ -156,9 +158,16 @@
                                  th:with="filename=${T(com.binder.demo.services.AttachmentService).filenameFromUrl(att.url)},
                                           lower=${#strings.toLowerCase(filename)},
                                           isImage=${lower.endsWith('.png') or lower.endsWith('.jpg') or lower.endsWith('.jpeg') or lower.endsWith('.gif') or lower.endsWith('.webp')},
-                                          isPdf=${lower.endsWith('.pdf')}">
+                                          isPdf=${lower.endsWith('.pdf')},
+                                          inlineUrl=${(isImage or isPdf) ? '/attachments/' + att.attachmentId + '/inline' : ''},
+                                          downloadUrl=${'/attachments/' + att.attachmentId}"
+                                 th:attr="data-attachment-id=${att.attachmentId},
+                                          data-attachment-name=${filename},
+                                          data-attachment-image=${isImage},
+                                          data-attachment-inline=${inlineUrl},
+                                          data-attachment-download=${downloadUrl}">
                                 <a class="post-attachment-preview"
-                                   th:href="${isImage or isPdf} ? @{/attachments/{id}/inline(id=${att.attachmentId})} : @{/attachments/{id}(id=${att.attachmentId})}"
+                                   th:href="${isImage or isPdf ? inlineUrl : downloadUrl}"
                                    th:target="${isImage or isPdf ? '_blank' : null}">
                                     <img class="post-attachment-image"
                                          th:if="${isImage}"

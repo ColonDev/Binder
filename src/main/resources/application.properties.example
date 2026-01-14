@@ -1,5 +1,0 @@
-spring.application.name=Binder
-spring.datasource.url=jdbc:postgresql://localhost:5432/binder_db
-spring.datasource.username=YOUR_DB_USER
-spring.datasource.password=YOUR_DB_PASSWORD
-spring.sql.init.mode=never

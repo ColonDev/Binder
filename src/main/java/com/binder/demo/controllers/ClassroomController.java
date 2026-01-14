@@ -4,7 +4,6 @@ import com.binder.demo.classroom.Classroom;
 import com.binder.demo.services.ClassroomPostService;
 import com.binder.demo.services.ClassroomService;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
