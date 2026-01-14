@@ -12,9 +12,9 @@ public class Grade {
     @Column(name = "submission_id", nullable = false)
     private UUID submissionId;
 
-    @MapsId
+    @MapsId("submissionId")
     @OneToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "submission_id")
+    @JoinColumn(name = "submission_id", referencedColumnName = "submission_id", nullable = false)
     private AssignmentSubmission submission;
 
     @Column(name = "teacher_id", nullable = false)

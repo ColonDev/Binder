@@ -33,6 +33,7 @@
                     <div class="header">Classroom</div>
                     <div class="body">
                         <button class="btn btn-primary" type="button" data-action="open-modal" data-modal-id="postCreateModal">Create Post</button>
+                        <button class="btn" type="button" data-action="open-modal" data-modal-id="submissionReviewModal" style="margin-top:10px;">Review Submissions</button>
                         <button class="btn" type="button" data-action="open-modal" data-modal-id="classroomEditModal" style="margin-top:10px;">Edit Classroom</button>
                     </div>
                 </div>
@@ -138,7 +139,7 @@
 
                 <article th:each="post : ${posts}"
                          class="post-note"
-                         th:attr="data-type=${post.postType}"
+                         th:attr="data-type=${post.postType}, data-post-id=${post.postId}"
                          th:classappend="${post.postType == T(com.binder.demo.classroom.PostType).RESOURCE} ? ' is-resource' : ''">
 
                     <div class="post-note-header">
@@ -204,7 +205,25 @@
         <div th:replace="~{fragments/classroom-modals :: postCreateModal}"></div>
         <div th:replace="~{fragments/classroom-modals :: postEditModal}"></div>
         <div th:replace="~{fragments/classroom-modals :: submitModal}"></div>
+        <div th:replace="~{fragments/classroom-modals :: submissionReviewModal}"></div>
+        <div th:replace="~{fragments/classroom-modals :: studentResultModal}"></div>
         <div th:replace="~{fragments/classroom-modals :: classroomEditModal}"></div>
+        <div id="studentSubmissionData"
+             th:if="${studentSubmissionResults != null}"
+             style="display:none;">
+            <div th:each="result : ${studentSubmissionResults}"
+                 th:with="filename=${T(com.binder.demo.services.AttachmentService).filenameFromUrl(result.attachmentUrl)},
+                          lower=${#strings.toLowerCase(filename)},
+                          isImage=${lower.endsWith('.png') or lower.endsWith('.jpg') or lower.endsWith('.jpeg') or lower.endsWith('.gif') or lower.endsWith('.webp')},
+                          isPdf=${lower.endsWith('.pdf')}"
+                 th:attr="data-assignment-id=${result.assignmentId},
+                          data-attachment-id=${result.attachmentId},
+                          data-attachment-name=${filename},
+                          data-attachment-url=${result.attachmentUrl},
+                          data-attachment-image=${isImage},
+                          data-attachment-pdf=${isPdf}">
+            </div>
+        </div>
     </main>
 </div>
 

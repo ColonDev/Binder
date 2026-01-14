@@ -1,4 +1,32 @@
 <th:block xmlns:th="http://www.thymeleaf.org">
+    <div th:fragment="submissionAttachment(attachmentId, filename, isImage, isPdf)">
+        <div class="submission-attachment" th:if="${attachmentId != null}">
+            <a th:href="@{/attachments/{id}/inline(id=${attachmentId})}"
+               th:if="${isImage}"
+               target="_blank" rel="noopener">
+                <img class="submission-attachment-image"
+                     th:src="@{/attachments/{id}/inline(id=${attachmentId})}"
+                     th:alt="${filename}" />
+            </a>
+            <a class="submission-attachment-file"
+               th:if="${isPdf}"
+               th:href="@{/attachments/{id}/inline(id=${attachmentId})}"
+               target="_blank" rel="noopener">
+                PDF
+            </a>
+            <div class="submission-attachment-file" th:if="${!isImage and !isPdf}">
+                File
+            </div>
+            <a class="submission-attachment-name"
+               th:href="${isPdf ? '/attachments/' + attachmentId + '/inline' : '/attachments/' + attachmentId}"
+               th:target="${isPdf ? '_blank' : null}"
+               th:text="${filename}">
+                file.ext
+            </a>
+        </div>
+        <span th:if="${attachmentId == null}">—</span>
+    </div>
+
     <!-- CREATE POST MODAL -->
     <div id="postCreateModal" class="modal-overlay" aria-hidden="true"
          th:if="${isTeacher and hasClass}"
@@ -176,11 +204,24 @@
                        th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <input type="hidden" name="classroomId" th:value="${classroom.classId}" />
                 <input type="hidden" id="smAssignmentId" name="assignmentId" value="" />
+                <input type="hidden" id="smRemoveAttachment" name="removeAttachment" value="false" />
+
+                <div class="submission-post-card">
+                    <div class="submission-post-title" id="smPostTitle">Assignment</div>
+                    <div class="submission-post-meta" id="smPostMeta"></div>
+                    <div class="submission-post-desc" id="smPostDesc"></div>
+                </div>
 
                 <label class="field-label" for="smFile">Upload work</label>
                 <input id="smFile" class="input js-file-input" type="file" name="file" data-preview-target="smPreview" />
                 <div id="smPreview" class="file-preview" aria-live="polite"></div>
                 <div class="help">Optional: submit without a file if you only want to mark complete.</div>
+
+                <div id="smExistingAttachmentSection" style="display:none;">
+                    <div class="field-label">Existing attachment</div>
+                    <div id="smExistingAttachment" class="file-preview file-preview-existing" aria-live="polite"></div>
+                    <div class="help">Click × to remove the existing attachment.</div>
+                </div>
 
                 <label class="field-label" for="smMarkComplete" style="display:flex;align-items:center;gap:10px;">
                     <input id="smMarkComplete" type="checkbox" name="markComplete" value="true" />
@@ -192,6 +233,212 @@
                     <button class="btn btn-primary" type="submit">Submit</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- SUBMISSION REVIEW MODAL -->
+    <div id="submissionReviewModal" class="modal-overlay" aria-hidden="true"
+         th:if="${isTeacher and hasClass}"
+         th:fragment="submissionReviewModal">
+        <div class="modal" style="max-width:980px;">
+            <div class="modal-header">
+                <div class="modal-title">Assignment Submissions</div>
+                <button class="modal-close" type="button" data-action="close-modal" data-modal-id="submissionReviewModal">×</button>
+            </div>
+
+            <div class="modal-body">
+                <label class="field-label" for="submissionFilter">Assignment</label>
+                <select id="submissionFilter" class="select">
+                    <option th:each="post : ${posts}"
+                            th:if="${post.postType.name() == 'ASSIGNMENT'}"
+                            th:value="${post.postId}"
+                            th:text="${post.title}"
+                            th:attr="data-due=${post.dueDate}">
+                        Assignment
+                    </option>
+                </select>
+
+                <div class="submission-nav">
+                    <button class="icon-btn submission-nav-btn" type="button" id="submissionPrev" aria-label="Previous student">◀</button>
+                    <div class="submission-nav-status" id="submissionNavStatus">0 / 0</div>
+                    <button class="icon-btn submission-nav-btn" type="button" id="submissionNext" aria-label="Next student">▶</button>
+                </div>
+
+                <div class="submission-cards"
+                     th:if="${submissionReviews != null and !#lists.isEmpty(submissionReviews)}">
+                    <div class="submission-card"
+                         th:each="review : ${submissionReviews}"
+                         data-submission-card="true"
+                         th:attr="data-assignment-id=${review.assignmentId},
+                                  data-submitted-at=${review.submissionTime != null ? #temporals.format(review.submissionTime, 'yyyy-MM-dd''T''HH:mm:ss''Z''') : ''}"
+                         th:classappend="${(review.marksScored != null) or (review.feedback != null and !#strings.isEmpty(review.feedback))} ? ' is-marked' : ''"
+                         th:with="filename=${T(com.binder.demo.services.AttachmentService).filenameFromUrl(review.attachmentUrl)},
+                                  lower=${#strings.toLowerCase(filename)},
+                                  isImage=${lower.endsWith('.png') or lower.endsWith('.jpg') or lower.endsWith('.jpeg') or lower.endsWith('.gif') or lower.endsWith('.webp')},
+                                  isPdf=${lower.endsWith('.pdf')}">
+                        <div class="submission-card-header">
+                            <div>
+                                <div class="submission-student" th:text="${review.studentName}">Student Name</div>
+                                <div class="submission-email" th:text="${review.studentEmail}">student@email.com</div>
+                            </div>
+                            <div class="submission-status">
+                                <span class="submission-overdue">Overdue</span>
+                                <span class="submission-marked" aria-live="polite">Marked</span>
+                            </div>
+                        </div>
+
+                        <div class="submission-card-body">
+                            <div class="submission-card-main">
+                                <div class="submission-meta">
+                                    <div class="submission-meta-label">Assignment</div>
+                                    <div class="submission-meta-value" th:text="${review.assignmentTitle}">Assignment</div>
+                                </div>
+
+                                <div class="submission-meta">
+                                    <div class="submission-meta-label">Submitted</div>
+                                    <div class="submission-meta-value"
+                                         th:text="${review.submissionTime != null ? #temporals.format(review.submissionTime, 'yyyy-MM-dd HH:mm') : '—'}">
+                                        time
+                                    </div>
+                                </div>
+
+                                <div class="submission-meta">
+                                    <div class="submission-meta-label">Attachment</div>
+                                    <div class="submission-meta-value">
+                                        <div th:replace="~{fragments/classroom-modals :: submissionAttachment(attachmentId=${review.attachmentId}, filename=${filename}, isImage=${isImage}, isPdf=${isPdf})}"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="submission-card-side">
+                                <form method="post" th:action="@{/classroom/post/assignment/grade}" class="submission-grade-form">
+                                    <input type="hidden" th:if="${_csrf != null}"
+                                           th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                    <input type="hidden" name="classroomId" th:value="${classroom.classId}" />
+                                    <input type="hidden" name="submissionId" th:value="${review.submissionId}" />
+                                    <div class="submission-grade-header">
+                                        <div class="submission-grade-marks">
+                                            <label class="field-label" th:for="'gradeMarks-' + ${review.submissionId}">
+                                                Marks<span th:if="${review.maxMarks != null}" th:text="' / ' + ${review.maxMarks}"></span>
+                                            </label>
+                                            <input class="input submission-grade-input"
+                                                   th:id="'gradeMarks-' + ${review.submissionId}"
+                                                   name="marksScored" type="number" min="0"
+                                                   th:attr="max=${review.maxMarks}"
+                                                   th:value="${review.marksScored}" placeholder="Marks" />
+                                        </div>
+                                        <button class="btn btn-primary submission-grade-btn" type="submit">Save</button>
+                                    </div>
+                                    <div class="submission-grade-fields">
+                                        <label class="field-label" th:for="'gradeFeedback-' + ${review.submissionId}">Feedback</label>
+                                        <textarea class="textarea submission-grade-textarea"
+                                                  th:id="'gradeFeedback-' + ${review.submissionId}"
+                                                  name="feedback" rows="8"
+                                                  th:text="${review.feedback}" placeholder="Feedback"></textarea>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="submissionReviewEmpty" class="help"
+                     th:style="${submissionReviews == null or #lists.isEmpty(submissionReviews)} ? '' : 'display:none;'">
+                    No submissions yet.
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- STUDENT RESULT MODAL -->
+    <div id="studentResultModal" class="modal-overlay" aria-hidden="true"
+         th:if="${isStudent and hasClass}"
+         th:fragment="studentResultModal">
+        <div class="modal" style="max-width:900px;">
+            <div class="modal-header">
+                <div class="modal-title">Submission Results</div>
+                <button class="modal-close" type="button" data-action="close-modal" data-modal-id="studentResultModal">×</button>
+            </div>
+
+            <div class="modal-body">
+                <label class="field-label" for="studentResultFilter">Assignment</label>
+                <select id="studentResultFilter" class="select">
+                    <option th:each="post : ${posts}"
+                            th:if="${post.postType.name() == 'ASSIGNMENT'}"
+                            th:value="${post.postId}"
+                            th:text="${post.title}">
+                        Assignment
+                    </option>
+                </select>
+
+                <div class="submission-nav">
+                    <button class="icon-btn submission-nav-btn" type="button" id="studentResultPrev" aria-label="Previous result">◀</button>
+                    <div class="submission-nav-status" id="studentResultStatus">0 / 0</div>
+                    <button class="icon-btn submission-nav-btn" type="button" id="studentResultNext" aria-label="Next result">▶</button>
+                </div>
+
+                <div class="submission-cards"
+                     th:if="${studentSubmissionResults != null and !#lists.isEmpty(studentSubmissionResults)}">
+                    <div class="submission-card"
+                         th:each="result : ${studentSubmissionResults}"
+                         data-student-result-card="true"
+                         th:attr="data-assignment-id=${result.assignmentId}"
+                         th:classappend="${(result.marksScored != null) or (result.feedback != null and !#strings.isEmpty(result.feedback))} ? ' is-marked' : ''"
+                         th:with="filename=${T(com.binder.demo.services.AttachmentService).filenameFromUrl(result.attachmentUrl)},
+                                  lower=${#strings.toLowerCase(filename)},
+                                  isImage=${lower.endsWith('.png') or lower.endsWith('.jpg') or lower.endsWith('.jpeg') or lower.endsWith('.gif') or lower.endsWith('.webp')},
+                                  isPdf=${lower.endsWith('.pdf')}">
+                        <div class="submission-card-header">
+                            <div>
+                                <div class="submission-student" th:text="${result.assignmentTitle}">Assignment</div>
+                                <div class="submission-email">Your submission</div>
+                            </div>
+                            <div class="submission-marked" aria-live="polite">Marked</div>
+                        </div>
+
+                        <div class="submission-meta">
+                            <div class="submission-meta-label">Submitted</div>
+                            <div class="submission-meta-value"
+                                 th:text="${result.submissionTime != null ? #temporals.format(result.submissionTime, 'yyyy-MM-dd HH:mm') : '—'}">
+                                time
+                            </div>
+                        </div>
+
+                        <div class="submission-meta">
+                            <div class="submission-meta-label">Attachment</div>
+                            <div class="submission-meta-value">
+                                <div th:replace="~{fragments/classroom-modals :: submissionAttachment(attachmentId=${result.attachmentId}, filename=${filename}, isImage=${isImage}, isPdf=${isPdf})}"></div>
+                            </div>
+                        </div>
+
+                        <div class="submission-meta">
+                            <div class="submission-meta-label">Grade</div>
+                            <div class="submission-meta-value"
+                                 th:text="${(result.marksScored != null and result.maxMarks != null) ? result.marksScored + ' / ' + result.maxMarks : (result.marksScored != null ? result.marksScored : 'Not graded')}">
+                                Not graded
+                            </div>
+                        </div>
+
+                        <div class="submission-meta">
+                            <div class="submission-meta-label">Feedback</div>
+                            <div class="submission-meta-value">
+                                <textarea class="textarea submission-grade-textarea" rows="4" readonly
+                                          th:text="${result.feedback}"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="studentResultEmpty" class="help"
+                     th:style="${studentSubmissionResults == null or #lists.isEmpty(studentSubmissionResults)} ? '' : 'display:none;'">
+                    No submissions yet.
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn" type="button" data-action="close-modal" data-modal-id="studentResultModal">Close</button>
+                </div>
+            </div>
         </div>
     </div>
 

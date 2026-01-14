@@ -172,7 +172,103 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = actionEl.dataset.assignmentId;
             const field = document.getElementById('smAssignmentId');
             if (field) field.value = id || '';
+
+            const removeInput = document.getElementById('smRemoveAttachment');
+            if (removeInput) removeInput.value = 'false';
+
+            const postEl = document.querySelector(`[data-post-id="${id}"]`);
+            const titleEl = document.getElementById('smPostTitle');
+            const descEl = document.getElementById('smPostDesc');
+            const metaEl = document.getElementById('smPostMeta');
+            if (postEl) {
+                const postTitle = postEl.querySelector('.post-note-title')?.textContent?.trim() || '';
+                const postDesc = postEl.querySelector('.post-note-body')?.textContent?.trim() || '';
+                const postMeta = postEl.querySelector('.post-note-meta')?.textContent?.trim() || '';
+                if (titleEl) titleEl.textContent = postTitle;
+                if (descEl) descEl.textContent = postDesc;
+                if (metaEl) metaEl.textContent = postMeta;
+            }
+
+            const existingSection = document.getElementById('smExistingAttachmentSection');
+            const existingPreview = document.getElementById('smExistingAttachment');
+            if (existingSection && existingPreview) {
+                existingPreview.innerHTML = '';
+                existingSection.style.display = 'none';
+                const dataContainer = document.getElementById('studentSubmissionData');
+                const dataEl = dataContainer ? dataContainer.querySelector(`[data-assignment-id="${id}"]`) : null;
+                const attachmentId = dataEl?.getAttribute('data-attachment-id');
+                const attachmentName = dataEl?.getAttribute('data-attachment-name') || '';
+                const attachmentImage = dataEl?.getAttribute('data-attachment-image') === 'true';
+                const attachmentPdf = dataEl?.getAttribute('data-attachment-pdf') === 'true';
+                if (attachmentId) {
+                    const item = document.createElement('div');
+                    item.className = 'file-preview-item';
+                    item.dataset.attachmentId = attachmentId;
+
+                    if (attachmentImage) {
+                        const img = document.createElement('img');
+                        img.src = `/attachments/${attachmentId}/inline`;
+                        img.alt = attachmentName || 'Existing image';
+                        img.className = 'file-preview-image';
+                        item.appendChild(img);
+                    } else {
+                        const fileBadge = document.createElement('div');
+                        fileBadge.className = 'file-preview-file';
+                        fileBadge.textContent = attachmentPdf ? 'PDF' : 'File';
+                        item.appendChild(fileBadge);
+                    }
+
+                    const meta = document.createElement('div');
+                    meta.className = 'file-preview-meta';
+                    meta.textContent = attachmentName || 'Attachment';
+                    item.appendChild(meta);
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'file-preview-remove';
+                    removeBtn.dataset.action = 'remove-submission-attachment';
+                    removeBtn.setAttribute('aria-label', 'Remove attachment');
+                    removeBtn.textContent = '×';
+                    item.appendChild(removeBtn);
+
+                    existingPreview.appendChild(item);
+                    existingSection.style.display = 'block';
+                }
+            }
+
             openModal('submitModal');
+            return;
+        }
+
+        if (action === 'open-review-modal') {
+            const assignmentId = actionEl.dataset.assignmentId || '';
+            const filter = document.getElementById('submissionFilter');
+            if (filter && assignmentId) {
+                filter.value = assignmentId;
+                filter.dispatchEvent(new Event('change'));
+            }
+            openModal('submissionReviewModal');
+            return;
+        }
+
+        if (action === 'open-student-result') {
+            const assignmentId = actionEl.dataset.assignmentId || '';
+            const filter = document.getElementById('studentResultFilter');
+            if (filter && assignmentId) {
+                filter.value = assignmentId;
+                filter.dispatchEvent(new Event('change'));
+            }
+            openModal('studentResultModal');
+            return;
+        }
+
+        if (action === 'remove-submission-attachment') {
+            const existingSection = document.getElementById('smExistingAttachmentSection');
+            const existingPreview = document.getElementById('smExistingAttachment');
+            const removeInput = document.getElementById('smRemoveAttachment');
+            if (existingPreview) existingPreview.innerHTML = '';
+            if (existingSection) existingSection.style.display = 'none';
+            if (removeInput) removeInput.value = 'true';
             return;
         }
 
@@ -359,6 +455,113 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    const setupCarousel = (options) => {
+        const {
+            filterId,
+            prevId,
+            nextId,
+            statusId,
+            cardSelector,
+            emptyId,
+            dueData
+        } = options;
+        const filter = document.getElementById(filterId);
+        const prev = document.getElementById(prevId);
+        const next = document.getElementById(nextId);
+        const status = document.getElementById(statusId);
+        const cards = Array.from(document.querySelectorAll(cardSelector));
+        const cardMap = new Map();
+        cards.forEach((card) => {
+            const assignmentId = card.getAttribute('data-assignment-id') || '';
+            if (!cardMap.has(assignmentId)) cardMap.set(assignmentId, []);
+            cardMap.get(assignmentId).push(card);
+        });
+        const assignmentDueMap = new Map();
+        if (filter && dueData) {
+            Array.from(filter.options).forEach((opt) => {
+                const due = opt.dataset.due || '';
+                if (opt.value) assignmentDueMap.set(opt.value, due);
+            });
+        }
+        const state = {
+            assignmentId: filter?.value || '',
+            index: 0
+        };
+        const update = () => {
+            const visible = cardMap.get(state.assignmentId) || [];
+            cards.forEach((card) => {
+                card.classList.remove('is-active', 'is-overdue');
+            });
+            if (visible.length > 0) {
+                const safeIndex = Math.max(0, Math.min(state.index, visible.length - 1));
+                state.index = safeIndex;
+                visible[safeIndex].classList.add('is-active');
+                if (dueData) {
+                    const dueRaw = assignmentDueMap.get(state.assignmentId) || '';
+                    const submittedRaw = visible[safeIndex].getAttribute('data-submitted-at') || '';
+                    if (dueRaw && submittedRaw) {
+                        const dueDate = new Date(dueRaw);
+                        const submittedDate = new Date(submittedRaw);
+                        if (!Number.isNaN(dueDate.getTime()) && !Number.isNaN(submittedDate.getTime())) {
+                            if (submittedDate.getTime() > dueDate.getTime()) {
+                                visible[safeIndex].classList.add('is-overdue');
+                            }
+                        }
+                    }
+                }
+            }
+            if (status) {
+                status.textContent = visible.length ? `${state.index + 1} / ${visible.length}` : '0 / 0';
+            }
+            if (prev) prev.disabled = state.index <= 0;
+            if (next) next.disabled = visible.length === 0 || state.index >= visible.length - 1;
+            const empty = document.getElementById(emptyId);
+            if (empty) empty.style.display = visible.length === 0 ? '' : 'none';
+        };
+        if (filter) {
+            if (!filter.value && filter.options.length) {
+                filter.value = filter.options[0].value;
+            }
+            state.assignmentId = filter.value;
+            filter.addEventListener('change', () => {
+                state.assignmentId = filter.value;
+                state.index = 0;
+                update();
+            });
+        }
+        prev?.addEventListener('click', () => {
+            state.index -= 1;
+            update();
+        });
+        next?.addEventListener('click', () => {
+            state.index += 1;
+            update();
+        });
+        if (cards.length) {
+            update();
+        }
+    };
+
+    setupCarousel({
+        filterId: 'submissionFilter',
+        prevId: 'submissionPrev',
+        nextId: 'submissionNext',
+        statusId: 'submissionNavStatus',
+        cardSelector: '[data-submission-card]',
+        emptyId: 'submissionReviewEmpty',
+        dueData: true
+    });
+
+    setupCarousel({
+        filterId: 'studentResultFilter',
+        prevId: 'studentResultPrev',
+        nextId: 'studentResultNext',
+        statusId: 'studentResultStatus',
+        cardSelector: '[data-student-result-card]',
+        emptyId: 'studentResultEmpty',
+        dueData: false
+    });
+
     // Switch enrollment list
     const enrollmentFilter = document.getElementById('enrollmentFilter');
     const setEnrollmentView = (value) => {
@@ -376,7 +579,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close on Escape
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') return;
-        ['postCreateModal', 'postEditModal', 'submitModal', 'classroomEditModal'].forEach((id) => closeModal(id));
+        ['postCreateModal', 'postEditModal', 'submitModal', 'submissionReviewModal', 'studentResultModal', 'classroomEditModal']
+            .forEach((id) => closeModal(id));
         if (main && main.classList.contains('manage-open')) setManageOpen(false);
     });
 });

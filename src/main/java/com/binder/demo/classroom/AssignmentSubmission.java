@@ -30,8 +30,7 @@ public class AssignmentSubmission {
     @JoinColumn(name = "attachment_id")
     private Attachment attachment;
 
-    @OneToOne(mappedBy = "submission", fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL, optional = true)
+    @OneToOne(mappedBy = "submission", cascade = CascadeType.ALL, optional = true)
     private Grade grade;
 
     @PrePersist

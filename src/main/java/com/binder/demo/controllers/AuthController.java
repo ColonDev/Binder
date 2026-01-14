@@ -1,7 +1,7 @@
 package com.binder.demo.controllers;
 
 import com.binder.demo.classroom.Classroom;
-import com.binder.demo.services.ClassroomService;
+import com.binder.demo.services.ClassroomEnrollmentService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -32,7 +32,7 @@ public class AuthController {
     /**
      * Loads classroom data for the dashboard.
      */
-    private final ClassroomService classroomService;
+    private final ClassroomEnrollmentService enrollmentService;
 
     /**
      * Basic email format checker.
@@ -46,9 +46,9 @@ public class AuthController {
      * @param jdbcTemplate SQL helper
      * @param classroomService classroom service
      */
-    public AuthController(JdbcTemplate jdbcTemplate, ClassroomService classroomService) {
+    public AuthController(JdbcTemplate jdbcTemplate, ClassroomEnrollmentService enrollmentService) {
         this.jdbcTemplate = jdbcTemplate;
-        this.classroomService = classroomService;
+        this.enrollmentService = enrollmentService;
     }
 
     /**
@@ -146,8 +146,8 @@ public class AuthController {
         model.addAttribute("email", session.getAttribute("userEmail"));
         model.addAttribute("role", session.getAttribute("userRole"));
 
-        // Fetch classrooms using the ClassroomService (
-        List<Classroom> classrooms = classroomService.getClassroomsForUser(userId);
+        // Fetch classrooms for the dashboard.
+        List<Classroom> classrooms = enrollmentService.getClassroomsForUser(userId);
         model.addAttribute("classrooms", classrooms);
 
         return "dashboard";

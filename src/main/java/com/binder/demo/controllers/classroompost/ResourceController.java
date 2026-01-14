@@ -2,8 +2,8 @@ package com.binder.demo.controllers.classroompost;
 
 import com.binder.demo.classroom.Resource;
 import com.binder.demo.services.AttachmentService;
-import com.binder.demo.services.ClassroomPostService;
-import com.binder.demo.services.ClassroomService;
+import com.binder.demo.services.ClassroomEnrollmentService;
+import com.binder.demo.services.ResourcePostService;
 import com.binder.demo.user.Role;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,13 +25,13 @@ import java.util.UUID;
 public class ResourceController {
 
     /**
-     * Service used to manage posts.
+     * Service used to manage resources.
      */
-    private final ClassroomPostService classroomPostService;
+    private final ResourcePostService resourcePostService;
     /**
      * Service used to validate classroom membership.
      */
-    private final ClassroomService classroomService;
+    private final ClassroomEnrollmentService enrollmentService;
     /**
      * Helper used to manage post attachments.
      */
@@ -40,17 +40,17 @@ public class ResourceController {
     /**
      * Creates a controller with required services.
      *
-     * @param classroomPostService post service
-     * @param classroomService classroom service
+     * @param resourcePostService resource service
+     * @param enrollmentService enrollment service
      * @param attachmentService attachment service
      * @param storageDir base directory for uploaded files
      */
-    public ResourceController(ClassroomPostService classroomPostService,
-                              ClassroomService classroomService,
+    public ResourceController(ResourcePostService resourcePostService,
+                              ClassroomEnrollmentService enrollmentService,
                               AttachmentService attachmentService,
                               @Value("${attachments.storage-dir:uploads}") String storageDir) {
-        this.classroomPostService = classroomPostService;
-        this.classroomService = classroomService;
+        this.resourcePostService = resourcePostService;
+        this.enrollmentService = enrollmentService;
         this.attachmentHelper = new PostAttachmentHelper(attachmentService,
                 Path.of(storageDir).toAbsolutePath().normalize());
     }
@@ -84,7 +84,7 @@ public class ResourceController {
         resource.setCreatedAt(Instant.now());
         attachmentHelper.attachFilesIfPresent(resource, file, userId, true);
 
-        classroomPostService.addResource(resource);
+        resourcePostService.addResource(resource);
         return "redirect:/classrooms/" + classroomId;
     }
 
@@ -103,7 +103,7 @@ public class ResourceController {
         UUID userId = (UUID) session.getAttribute("userId");
         String role = (String) session.getAttribute("userRole");
         if (isTeacherInClass(userId, role, classroomId)) {
-            classroomPostService.removeResource(resourceId);
+            resourcePostService.removeResource(resourceId);
         }
         return "redirect:/classrooms/" + classroomId;
     }
@@ -133,7 +133,7 @@ public class ResourceController {
             return "redirect:/classrooms/" + classroomId;
         }
 
-        Optional<Resource> resourceOpt = classroomPostService.findResource(postId);
+        Optional<Resource> resourceOpt = resourcePostService.findResource(postId);
         if (resourceOpt.isEmpty()) {
             return "redirect:/classrooms/" + classroomId;
         }
@@ -144,7 +144,7 @@ public class ResourceController {
         attachmentHelper.removeAttachmentsIfPresent(resource, removeAttachmentIds);
         attachmentHelper.attachFilesIfPresent(resource, file, userId, Boolean.TRUE.equals(replaceAttachments));
 
-        classroomPostService.updateResource(resource);
+        resourcePostService.updateResource(resource);
         return "redirect:/classrooms/" + classroomId;
     }
 
@@ -159,6 +159,6 @@ public class ResourceController {
     private boolean isTeacherInClass(UUID userId, String role, UUID classroomId) {
         return userId != null
                 && Role.TEACHER.name().equals(role)
-                && classroomService.isUserInClass(classroomId, userId, Role.TEACHER);
+                && enrollmentService.isUserInClass(classroomId, userId, Role.TEACHER);
     }
 }

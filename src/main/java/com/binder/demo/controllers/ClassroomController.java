@@ -1,8 +1,10 @@
 package com.binder.demo.controllers;
 
 import com.binder.demo.classroom.Classroom;
+import com.binder.demo.services.ClassroomEnrollmentService;
 import com.binder.demo.services.ClassroomPostService;
 import com.binder.demo.services.ClassroomService;
+import com.binder.demo.services.ClassroomSubmissionService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,9 +21,19 @@ import java.util.UUID;
 public class ClassroomController {
 
     /**
-     * Classroom service used for persistence and enrollment operations.
+     * Classroom service used for persistence operations.
      */
     private final ClassroomService classroomService;
+    /**
+     * Enrollment service used for classroom membership operations.
+     */
+    private final ClassroomEnrollmentService enrollmentService;
+    /**
+     * Submission service used for assignment submissions.
+     */
+    private final ClassroomSubmissionService submissionService;
+    private final ClassroomEnrollmentService enrollmentService;
+    private final ClassroomSubmissionService submissionService;
     /**
      * Post service used to load posts for classroom views.
      */
@@ -31,11 +43,17 @@ public class ClassroomController {
      * Creates a controller with required services.
      *
      * @param classroomService classroom service
+     * @param enrollmentService enrollment service
+     * @param submissionService submission service
      * @param classroomPostService post service
      */
     public ClassroomController(ClassroomService classroomService,
+                               ClassroomEnrollmentService enrollmentService,
+                               ClassroomSubmissionService submissionService,
                                ClassroomPostService classroomPostService) {
         this.classroomService = classroomService;
+        this.enrollmentService = enrollmentService;
+        this.submissionService = submissionService;
         this.classroomPostService = classroomPostService;
     }
 
@@ -70,10 +88,10 @@ public class ClassroomController {
         Classroom saved = classroomService.createClass(classroom, userId);
 
         if (studentEmails != null && !studentEmails.isBlank()) {
-            classroomService.enrollStudentsByEmails(saved.getClassId(), studentEmails);
+            enrollmentService.enrollStudentsByEmails(saved.getClassId(), studentEmails);
         }
         if (teacherEmails != null && !teacherEmails.isBlank()) {
-            classroomService.enrollTeachersByEmails(saved.getClassId(), teacherEmails);
+            enrollmentService.enrollTeachersByEmails(saved.getClassId(), teacherEmails);
         }
 
         return "redirect:/dashboard";
@@ -110,8 +128,16 @@ public class ClassroomController {
             model.addAttribute("name", session.getAttribute("userName"));
             model.addAttribute("role", session.getAttribute("userRole"));
             model.addAttribute("posts", classroomPostService.getPostsForClassroom(id));
-            model.addAttribute("enrolledStudents", classroomService.getEnrolledStudentEmails(id));
-            model.addAttribute("enrolledTeachers", classroomService.getEnrolledTeacherEmails(id));
+            model.addAttribute("enrolledStudents", enrollmentService.getEnrolledStudentEmails(id));
+            model.addAttribute("enrolledTeachers", enrollmentService.getEnrolledTeacherEmails(id));
+            Object role = session.getAttribute("userRole");
+            if ("TEACHER".equals(role)) {
+                model.addAttribute("submissionReviews", submissionService.getSubmissionReviewsForClassroom(id));
+            }
+            if ("STUDENT".equals(role)) {
+                model.addAttribute("submittedPostIds", submissionService.getSubmittedAssignmentIds(id, userId));
+                model.addAttribute("studentSubmissionResults", submissionService.getSubmissionResultsForStudent(id, userId));
+            }
             return "classroom";
         }
         return "redirect:/dashboard";
@@ -135,8 +161,8 @@ public class ClassroomController {
         String role = (String) session.getAttribute("userRole");
 
         if (userId != null && "TEACHER".equals(role)) {
-            if (classroomService.isUserInClass(classId, userId, com.binder.demo.user.Role.TEACHER)) {
-                List<String> mismatched = classroomService.enrollStudentsByEmailsWithValidation(classId, studentEmails);
+            if (enrollmentService.isUserInClass(classId, userId, com.binder.demo.user.Role.TEACHER)) {
+                List<String> mismatched = enrollmentService.enrollStudentsByEmailsWithValidation(classId, studentEmails);
                 if (!mismatched.isEmpty()) {
                     redirectAttributes.addFlashAttribute("studentEnrollError",
                             "These emails are not students: " + String.join(", ", mismatched));
@@ -165,8 +191,8 @@ public class ClassroomController {
         String role = (String) session.getAttribute("userRole");
 
         if (userId != null && "TEACHER".equals(role)) {
-            if (classroomService.isUserInClass(classId, userId, com.binder.demo.user.Role.TEACHER)) {
-                List<String> mismatched = classroomService.enrollTeachersByEmailsWithValidation(classId, teacherEmails);
+            if (enrollmentService.isUserInClass(classId, userId, com.binder.demo.user.Role.TEACHER)) {
+                List<String> mismatched = enrollmentService.enrollTeachersByEmailsWithValidation(classId, teacherEmails);
                 if (!mismatched.isEmpty()) {
                     redirectAttributes.addFlashAttribute("teacherEnrollError",
                             "These emails are not teachers: " + String.join(", ", mismatched));
@@ -193,8 +219,8 @@ public class ClassroomController {
         String role = (String) session.getAttribute("userRole");
 
         if (userId != null && "TEACHER".equals(role)) {
-            if (classroomService.isUserInClass(classId, userId, com.binder.demo.user.Role.TEACHER)) {
-                classroomService.removeStudentFromClassByEmail(classId, email);
+            if (enrollmentService.isUserInClass(classId, userId, com.binder.demo.user.Role.TEACHER)) {
+                enrollmentService.removeStudentFromClassByEmail(classId, email);
             }
         }
 

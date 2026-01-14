@@ -53,6 +53,13 @@
                 Submit
             </button>
 
+            <button class="btn" type="button"
+                    th:if="${isSubmitted}"
+                    th:attr="data-assignment-id=${post.postId}"
+                    data-action="open-student-result">
+                View result
+            </button>
+
             <form th:if="${isSubmitted}"
                   method="post" th:action="@{/classroom/post/assignment/unsubmit}" style="display:inline;">
                 <input type="hidden" th:if="${_csrf != null}"
@@ -61,6 +68,14 @@
                 <input type="hidden" name="assignmentId" th:value="${post.postId}" />
                 <button class="btn btn-danger" type="submit">Un-submit</button>
             </form>
+        </th:block>
+
+        <th:block th:if="${isTeacher and post.postType == T(com.binder.demo.classroom.PostType).ASSIGNMENT}">
+            <button class="btn" type="button"
+                    th:attr="data-assignment-id=${post.postId}"
+                    data-action="open-review-modal">
+                Grade
+            </button>
         </th:block>
     </div>
 </th:block>

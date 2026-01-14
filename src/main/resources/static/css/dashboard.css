@@ -26,9 +26,6 @@
     color: inherit;
     display: block;
 }
-.note:hover {
-    transform: scale(1.02);
-}
 
 .note.yellow{ background:var(--note-yellow); }
 .note.green{ background:var(--note-green); }
