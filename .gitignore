@@ -6,7 +6,5 @@
 
 # IDE files
 .idea/MarsCodeWorkspaceAppSettings.xml
-.idea/zencoder/
+.env
 
-# Local config
-src/main/resources/application.properties
