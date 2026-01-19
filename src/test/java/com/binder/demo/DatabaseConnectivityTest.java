@@ -24,9 +24,9 @@ class DatabaseConnectivityTest {
 
     @Test
     void testTablesExist() {
-        // Checking for the existence of the 'users' table created in init.sql
+        // H2 stores unquoted identifiers in uppercase by default.
         Boolean tableExists = jdbcTemplate.queryForObject(
-                "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users')",
+                "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'USERS')",
                 Boolean.class
         );
         assertTrue(tableExists, "The 'users' table should exist in the database.");

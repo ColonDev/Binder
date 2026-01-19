@@ -100,7 +100,7 @@ public class ClassroomEnrollmentService {
      * @param userId user id
      * @return list of classrooms
      */
-    public List getClassroomsForUser(UUID userId) {
+    public List<Classroom> getClassroomsForUser(UUID userId) {
         if (userId == null) return List.of();
 
         return em.createNativeQuery("""
@@ -159,7 +159,7 @@ public class ClassroomEnrollmentService {
         userService.removeStudentFromClassByEmail(classId, email);
     }
 
-    private List getClassroomEmails(String sql, UUID classId) {
+    private List<String> getClassroomEmails(String sql, UUID classId) {
         return em.createNativeQuery(sql, String.class)
                 .setParameter("classId", classId)
                 .getResultList();

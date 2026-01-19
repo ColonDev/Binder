@@ -151,7 +151,7 @@ public class ClassroomSubmissionService {
      * @return list of submitted assignment ids
      */
     @Transactional(readOnly = true)
-    public List getSubmittedAssignmentIds(UUID classId, UUID studentId) {
+    public List<UUID> getSubmittedAssignmentIds(UUID classId, UUID studentId) {
         if (classId == null || studentId == null) return List.of();
 
         return em.createNativeQuery("""
@@ -258,6 +258,7 @@ public class ClassroomSubmissionService {
             em.merge(submission);
         }
     }
+
 
     private Attachment storeSubmissionAttachment(MultipartFile file, UUID userId) {
         if (file == null || file.isEmpty() || userId == null) return null;

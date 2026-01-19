@@ -60,14 +60,6 @@
                 View result
             </button>
 
-            <form th:if="${isSubmitted}"
-                  method="post" th:action="@{/classroom/post/assignment/unsubmit}" style="display:inline;">
-                <input type="hidden" th:if="${_csrf != null}"
-                       th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                <input type="hidden" name="classroomId" th:value="${classroom.classId}" />
-                <input type="hidden" name="assignmentId" th:value="${post.postId}" />
-                <button class="btn btn-danger" type="submit">Un-submit</button>
-            </form>
         </th:block>
 
         <th:block th:if="${isTeacher and post.postType == T(com.binder.demo.classroom.PostType).ASSIGNMENT}">

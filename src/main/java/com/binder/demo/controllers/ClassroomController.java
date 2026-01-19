@@ -32,8 +32,6 @@ public class ClassroomController {
      * Submission service used for assignment submissions.
      */
     private final ClassroomSubmissionService submissionService;
-    private final ClassroomEnrollmentService enrollmentService;
-    private final ClassroomSubmissionService submissionService;
     /**
      * Post service used to load posts for classroom views.
      */
